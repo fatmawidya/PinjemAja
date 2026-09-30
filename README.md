@@ -1,11 +1,7 @@
 2506656614	DELLA PERMATA PRASILDA
-
 2506656835	JOCELINE NADINE IMMANUELLA
-
 2506533614	FATMA WIDYA RACHMA
-
 2506589755	KHANYFATUL MUFLIKHAT
-
 2506604573	NAFEEZA ARWATABINA
 
 # Pinjem Aja
@@ -45,3 +41,5 @@ Modul dibuat sesederhana mungkin di tahap awal, fokus pada alur pinjam dan barte
 | 3 | Modul Pencarian, Filter & Lokasi | Celine |
 | 4 | Modul Profil | Khanyfah |
 | 5 | Chat | Fatma |
+
+# CP 2
