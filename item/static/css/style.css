@@ -114,3 +114,115 @@
 @media (max-width: 480px) {
     .pa-panel { padding: 24px; }
 }
+
+/*item_card.html*/
+
+/*tombol outline & hapus*/
+.btn-pa-outline,
+.btn-pa-danger {
+    display: inline-block;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-pa-outline { background: transparent; border-color: var(--primary); color: var(--primary); }
+.btn-pa-outline:hover { background: var(--primary); color: var(--white); }
+
+.btn-pa-danger { background: var(--danger); color: var(--white); }
+.btn-pa-danger:hover { background: #a30f0f; color: var(--white); }
+
+/*kartu barang*/
+.catalog-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    transition: 0.2s ease;
+}
+
+.catalog-card:hover { transform: translateY(-4px); }
+
+.catalog-link { display: block; flex: 1; }
+
+.catalog-image {
+    aspect-ratio: 1 / 1;
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+    text-align: center;
+}
+
+.catalog-image span { padding: 10px; }
+
+.catalog-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.catalog-category {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 12px 0 0;
+}
+
+.catalog-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 2px 0;
+}
+
+.catalog-location {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+.catalog-price {
+    color: var(--danger);
+    font-weight: 700;
+    margin: 8px 0 12px;
+}
+
+/*label status*/
+.status-pill {
+    display: block;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    padding: 7px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.status-pill.available   { background: var(--accent); color: var(--primary); }
+.status-pill.borrowed    { background: var(--danger); color: var(--white); }
+.status-pill.unavailable { background: var(--border); color: var(--muted); }
+
+/*tombol Edit / Hapus di kartu (my_items)*/
+.catalog-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.catalog-actions a {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
