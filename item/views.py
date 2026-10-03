@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import ItemForm
 from .models import Item, ItemImage
@@ -59,8 +61,9 @@ def item_update(request, pk):
         if form.is_valid():
             form.save()
             # foto baru ditambahkan setelah foto yang sudah ada
+            last = item.images.aggregate(Max('order'))['order__max']
             _save_images(item, form.cleaned_data['images'],
-                         start_order=item.images.count())
+                         start_order=0 if last is None else last + 1)
             messages.success(request, 'Barang berhasil diperbarui.')
             return redirect('item:item_detail', pk=item.pk)
     else:
@@ -68,6 +71,21 @@ def item_update(request, pk):
     return render(request, 'item/item_form.html', {
         'form': form, 'mode': 'update', 'item': item,
     })
+
+
+# hapus satu foto barang (hanya owner)
+@login_required
+@require_POST
+def item_image_delete(request, pk, image_pk):
+    item = get_object_or_404(Item, pk=pk)
+    if item.owner != request.user:
+        raise PermissionDenied
+
+    image = get_object_or_404(ItemImage, pk=image_pk, item=item)
+    image.image.delete(save=False)   
+    image.delete()
+    messages.success(request, 'Foto berhasil dihapus.')
+    return redirect('item:item_update', pk=item.pk)
 
 
 # hanya owner yang boleh hapus

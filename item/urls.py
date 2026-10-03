@@ -10,4 +10,5 @@ urlpatterns = [
     path('<uuid:pk>/', views.item_detail, name='item_detail'),
     path('<uuid:pk>/edit/', views.item_update, name='item_update'),
     path('<uuid:pk>/hapus/', views.item_delete, name='item_delete'),
+    path('<uuid:pk>/foto/<int:image_pk>/hapus/', views.item_image_delete, name='item_image_delete'),
 ]
