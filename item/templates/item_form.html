@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %} - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+{% endblock meta %}
+
+{% block content %}
+<main class="pa-page">
+    <div class="container">
+        <div class="pa-panel">
+            <h1>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %}</h1>
+
+            <form method="post" enctype="multipart/form-data" class="pa-form" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="pa-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                    {{ field.errors }}
+                </div>
+                {% endfor %}
+
+                {% if mode == 'update' and item.images.all %}
+                <div class="pa-field">
+                    <label>Foto saat ini</label>
+                    <div class="pa-thumbs">
+                        {% for img in item.images.all %}
+                        <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}">
+                        {% endfor %}
+                    </div>
+                    <small>Foto yang kamu pilih di atas akan ditambahkan setelah foto ini.</small>
+                </div>
+                {% endif %}
+
+                <div class="pa-form-actions">
+                    <button type="submit" class="btn-pa-primary">Simpan Barang</button>
+                    {% if mode == 'update' %}
+                    <a href="{% url 'item:item_detail' item.pk %}" class="pa-link">Kembali</a>
+                    {% else %}
+                    <a href="{% url 'item:item_list' %}" class="pa-link">Kembali</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock content %}

@@ -2,3 +2,115 @@
 .pa-messages {
     margin-bottom: 20px;
 }
+
+/*item_form.html*/
+:root {
+    --danger: #C81414;
+}
+
+/*wrapper halaman (dipakai semua halaman item)*/
+.pa-page {
+    padding: 48px 0 90px;
+    min-height: 65vh;
+}
+
+.pa-link {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.pa-link:hover { color: var(--accent); }
+
+/*tombol utama*/
+.btn-pa-primary {
+    display: inline-block;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: 0.2s ease;
+    background: var(--accent);
+    color: var(--primary);
+}
+
+.btn-pa-primary:hover { background: #e5a800; color: var(--primary); }
+
+/*panel & form*/
+.pa-panel {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.pa-panel h1 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 24px;
+}
+
+.pa-field { margin-bottom: 20px; text-align: left; }
+
+.pa-field label {
+    display: block;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.pa-field input[type="text"],
+.pa-field input[type="number"],
+.pa-field select,
+.pa-field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    font-family: inherit;
+}
+
+.pa-field input[type="file"] { width: 100%; }
+
+.pa-field input:focus,
+.pa-field select:focus,
+.pa-field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.pa-field small { display: block; color: var(--muted); margin-top: 4px; }
+
+.pa-field .errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+}
+
+.pa-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.pa-thumbs img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.pa-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 28px;
+}
+
+@media (max-width: 480px) {
+    .pa-panel { padding: 24px; }
+}
