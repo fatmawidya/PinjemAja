@@ -214,7 +214,7 @@
 .status-pill.borrowed    { background: var(--danger); color: var(--white); }
 .status-pill.unavailable { background: var(--border); color: var(--muted); }
 
-/*tombol Edit / Hapus di kartu (my_items)*/
+/*tombol Edit/Hapus di kartu (my_items)*/
 .catalog-actions {
     display: flex;
     gap: 8px;
@@ -225,4 +225,40 @@
     flex: 1;
     padding: 6px 10px;
     font-size: 0.85rem;
+}
+
+/*item_list.html*/
+.pa-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+
+.pa-heading h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.pa-empty {
+    color: var(--muted);
+    padding: 40px 0;
+}
+
+.pa-empty a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 480px) {
+    .catalog-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
