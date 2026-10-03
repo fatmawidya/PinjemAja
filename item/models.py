@@ -18,7 +18,7 @@ class Item(models.Model):
         ('hobi', 'Hobi'),
         ('otomotif', 'Otomotif'),
         ('aksesoris', 'Aksesoris'),
-        ('Perlengkapan', 'Perlengkapan'),
+        ('perlengkapan', 'Perlengkapan'),
     ]
     CONDITION_CHOICES = [
         ('baru', 'Baru'),

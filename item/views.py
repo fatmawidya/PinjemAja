@@ -16,7 +16,7 @@ def _save_images(item, files, start_order=0):
 # Semua barang berstatus tersedia. Public (tidak wajib login)
 def item_list(request):
     items = Item.objects.filter(status='tersedia').prefetch_related('images')
-    return render(request, 'items/item_list.html', {'items': items})
+    return render(request, 'item/item_list.html', {'items': items})
 
 
 # Detail satu barang. Info kontak pemilik disembunyikan di template kalau belum login
@@ -24,7 +24,7 @@ def item_detail(request, pk):
     item = get_object_or_404(
         Item.objects.prefetch_related('images'), pk=pk
     )
-    return render(request, 'items/item_detail.html', {
+    return render(request, 'item/item_detail.html', {
         'item': item,
         'is_owner': request.user == item.owner,
     })
@@ -41,10 +41,10 @@ def item_create(request):
             item.save()
             _save_images(item, form.cleaned_data['images'])
             messages.success(request, 'Barang berhasil ditambahkan.')
-            return redirect('items:item_detail', pk=item.pk)
+            return redirect('item:item_detail', pk=item.pk)
     else:
         form = ItemForm()
-    return render(request, 'items/item_form.html', {'form': form, 'mode': 'create'})
+    return render(request, 'item/item_form.html', {'form': form, 'mode': 'create'})
 
 
 # hanya owner yang boleh edit
@@ -62,10 +62,10 @@ def item_update(request, pk):
             _save_images(item, form.cleaned_data['images'],
                          start_order=item.images.count())
             messages.success(request, 'Barang berhasil diperbarui.')
-            return redirect('items:item_detail', pk=item.pk)
+            return redirect('item:item_detail', pk=item.pk)
     else:
         form = ItemForm(instance=item)
-    return render(request, 'items/item_form.html', {
+    return render(request, 'item/item_form.html', {
         'form': form, 'mode': 'update', 'item': item,
     })
 
@@ -80,12 +80,12 @@ def item_delete(request, pk):
     if request.method == 'POST':
         item.delete()
         messages.success(request, 'Barang berhasil dihapus.')
-        return redirect('items:my_items')
-    return render(request, 'items/item_confirm_delete.html', {'item': item})
+        return redirect('item:my_items')
+    return render(request, 'item/item_confirm_delete.html', {'item': item})
 
 
 # Barang milik user yang sedang login
 @login_required
 def my_items(request):
     items = Item.objects.filter(owner=request.user).prefetch_related('images')
-    return render(request, 'items/my_items.html', {'items': items})
+    return render(request, 'item/my_items.html', {'items': items})
