@@ -54,10 +54,11 @@ a {
     margin: 0 auto;
 }
 
-.logo-svg {
+.logo-png {
     display: block;
     width: 100%;
     height: 100%;
+    object-fit: contain;
 }
 
 
@@ -136,6 +137,11 @@ a {
 
 .is-guest .header-search {
     border: 1px solid var(--border);
+}
+
+.search-icon {
+    display: flex;
+    color: var(--muted);
 }
 
 .header-search input {
@@ -234,7 +240,7 @@ a {
 
 
 /* ================================
-   SECTION TITLE 
+   SECTION TITLE (dipakai beberapa section)
    ================================ */
 
 .section-title {
@@ -367,6 +373,7 @@ a {
 
 /* ================================
    REKOMENDASI BARANG
+   (kartu memakai style modul item: item.css)
    ================================ */
 
 .recommend-section {
