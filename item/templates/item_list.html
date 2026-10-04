@@ -9,24 +9,27 @@
 {% block content %}
 <main class="pa-page">
     <div class="container">
-        {% include 'item/messages.html' %}
+        {% include 'item/_messages.html' %}
 
         <div class="pa-heading">
-            <h1>Rekomendasi Barang</h1>
+            <h1>{% if selected_category %}{{ selected_category }}{% else %}Rekomendasi Barang{% endif %}</h1>
             {% if user.is_authenticated %}
-            <a href="{% url 'item:item_create' %}" class="btn-pa-primary">Tambah Barang</a>
+            <a href="{% url 'item:item_create' %}" class="btn-pa-primary">+ Tambah Barang</a>
             {% endif %}
         </div>
 
         {% if items %}
         <div class="catalog-grid">
             {% for item in items %}
-                {% include 'item/item_card.html' with item=item show_actions=False %}
-            {% endif %}
+                {% include 'item/_item_card.html' with item=item show_actions=False %}
+            {% endfor %}
         </div>
-
+        
         {% else %}
-        <p class="pa-empty">Belum ada barang yang tersedia.</p>
+        <p class="pa-empty">
+            Belum ada barang yang tersedia{% if selected_category %} di kategori ini{% endif %}.
+            {% if selected_category %}<a href="{% url 'item:item_list' %}">Lihat semua barang</a>{% endif %}
+        </p>
         {% endif %}
     </div>
 </main>

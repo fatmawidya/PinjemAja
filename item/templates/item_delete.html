@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Hapus Barang - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+{% endblock meta %}
+
+{% block content %}
+<main class="pa-page">
+    <div class="container">
+        <div class="pa-panel pa-panel-narrow">
+            <h1>Hapus barang?</h1>
+            <p>
+                Kamu akan menghapus <strong>{{ item.name }}</strong> beserta semua fotonya.
+                Tindakan ini tidak bisa dibatalkan.
+            </p>
+
+            <form method="post" class="pa-form-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn-pa-danger">Ya, hapus</button>
+                <a href="{% url 'item:item_detail' item.pk %}" class="pa-link">Batal</a>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock content %}
