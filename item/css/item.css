@@ -499,3 +499,6 @@
     .detail-gallery { max-width: 420px; }
     .status-card { max-width: 420px; }
 }
+
+/* item_confirm_delete.html */
+.pa-panel-narrow { max-width: 520px; text-align: center; }

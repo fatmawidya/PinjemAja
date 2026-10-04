@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block meta %}
-<title>Semua Barang - PinjemAja</title>
+<title>Etalase Barang Saya - PinjemAja</title>
 <link rel="stylesheet" href="{% static 'item/css/item.css' %}">
 {% endblock meta %}
 
@@ -12,23 +12,20 @@
         {% include 'messages.html' %}
 
         <div class="pa-heading">
-            <h1>{% if selected_category %}{{ selected_category }}{% else %}Rekomendasi Barang{% endif %}</h1>
-            {% if user.is_authenticated %}
+            <h1>Etalase Barang Saya</h1>
             <a href="{% url 'item:item_create' %}" class="btn-pa-primary">+ Tambah Barang</a>
-            {% endif %}
         </div>
 
         {% if items %}
         <div class="catalog-grid">
             {% for item in items %}
-                {% include 'item_card.html' with item=item show_actions=False %}
+                {% include 'item_card.html' with item=item show_actions=True %}
             {% endfor %}
         </div>
-        
         {% else %}
         <p class="pa-empty">
-            Belum ada barang yang tersedia{% if selected_category %} di kategori ini{% endif %}.
-            {% if selected_category %}<a href="{% url 'item:item_list' %}">Lihat semua barang</a>{% endif %}
+            Kamu belum punya barang.
+            <a href="{% url 'item:item_create' %}">Tambah barang pertamamu</a>.
         </p>
         {% endif %}
     </div>
