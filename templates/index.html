@@ -92,7 +92,7 @@
             {% if recommended_items %}
             <div class="recommend-grid">
                 {% for item in recommended_items %}
-                    {% include 'item/_item_card.html' with item=item show_actions=False %}
+                    {% include 'item_card.html' with item=item show_actions=False %}
                 {% endfor %}
             </div>
             <p class="recommend-more">
@@ -120,7 +120,7 @@
                     dari limbah konsumtif, dan bangun komunitas yang saling percaya.
                 </p>
             </div>
-            <div class="about-logo">{% include 'logo.html' %}</div>
+            <div class="about-logo">{% include '_logo.html' %}</div>
         </div>
     </section>
 
