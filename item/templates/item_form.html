@@ -9,7 +9,7 @@
 {% block content %}
 <main class="pa-page">
     <div class="container">
-        {% include 'item/_messages.html' %}
+        {% include '_messages.html' %}
 
         <div class="pa-panel">
             <h1>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %}</h1>
@@ -48,7 +48,6 @@
                 </div>
                 {% endfor %}
 
-                
                 <div class="pa-form-actions">
                     <button type="submit" class="btn-pa-primary">Simpan Barang</button>
                     {% if mode == 'update' %}

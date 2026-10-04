@@ -9,7 +9,7 @@
 {% block content %}
 <main class="pa-page">
     <div class="container">
-        {% include 'item/_messages.html' %}
+        {% include '_messages.html' %}
 
         <div class="pa-heading">
             <h1>Etalase Barang Saya</h1>
@@ -19,7 +19,7 @@
         {% if items %}
         <div class="catalog-grid">
             {% for item in items %}
-                {% include 'item/_item_card.html' with item=item show_actions=True %}
+                {% include 'item_card.html' with item=item show_actions=True %}
             {% endfor %}
         </div>
         {% else %}

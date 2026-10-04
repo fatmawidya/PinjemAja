@@ -1,5 +1,5 @@
 {% with cover=item.cover_image %}
-<article class ="calatog-class">
+<article class="catalog-card">
     <a href="{% url 'item:item_detail' item.pk %}" class="catalog-link">
         <div class="catalog-image">
             {% if cover %}
@@ -8,15 +8,15 @@
                 <span>Belum ada foto</span>
             {% endif %}
         </div>
-        <p class="catalog-categoty">{{ item.get_category_display }}</p>
+        <p class="catalog-category">{{ item.get_category_display }}</p>
         <h3 class="catalog-name">{{ item.name }}</h3>
-        <p class="catalog-locaation">{{ item.location }}</p>
+        <p class="catalog-location">{{ item.location }}</p>
         <p class="catalog-price">Rp{{ item.price|floatformat:"0g" }} / hari</p>
     </a>
 
     {% if item.status == 'tersedia' %}
         <span class="status-pill available">Tersedia</span>
-    {% elif item.status == 'Terpinjam' %}
+    {% elif item.status == 'dipinjam' %}
         <span class="status-pill borrowed">Terpinjam</span>
     {% else %}
         <span class="status-pill unavailable">Tidak Tersedia</span>
