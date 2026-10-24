@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+    <title>Detail Transaksi - PinjemAja</title>
+    <link rel="stylesheet" href="/static/css/transaction.css">
+{% endblock meta %}
+
+{% block content %}
+<main class="transaksi-page py-5">
+    <div class="container-xl">
+        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+            <h1 class="transaction-title text-center mb-4">Detail Transaksi</h1>
+                {% if transaksi.barang.cover_image %}
+                    <img
+                        src="{{ transaksi.barang.cover_image.image.url }}"
+                        alt="{{ transaksi.barang.name }}"
+                        class="transaksi-image"
+                    >
+                {% else %}
+                    <div class="transaksi-image image-placeholder">
+                        Gambar<br>Katalog
+                    </div>
+                {% endif %}
+                <div class="transaksi-body">
+                    <h2 class="barang-title">
+                        {{ transaksi.barang.name }}
+                    </h2>
+
+                    {% if is_peminjam %}
+                        <p class="barang-owner">
+                            Pemilik: @{{ transaksi.pemilik.username }}
+                        </p>
+                        <p class="barang-peminjam">
+                            Peminjam: saya
+                        </p>
+                    {% else %}
+                        <p class="barang-owner">
+                            Pemilik: saya
+                        </p>
+                        <p class="barang-peminjam">
+                            Peminjam: @{{ transaksi.peminjam.username }}
+                        </p>
+                    {% endif %}
+
+                    <p class="tanggal-transaksi">
+                        transaksi dibuat pada tanggal: {{ transaksi.created_at|date:"d M Y" }}
+                    </p>
+
+                    <p class="tanggal-transaksi">
+                        {{ transaksi.tanggal_mulai|date:"d M Y" }}
+                        –
+                        {{ transaksi.tanggal_selesai|date:"d M Y" }}
+                    </p>
+
+                    {% if transaksi.status == 'selesai' %}
+                        <p class="status-text status-selesai">
+                            {{ transaksi.get_status_display }}
+                        </p>
+
+                    {% elif transaksi.status == 'dibatalkan' %}
+                        <p class="status-text status-batal">
+                            {{ transaksi.get_status_display }}
+                        </p>
+                        <p class="transaction-info">
+                            Dibatalkan oleh
+                            {% if transaksi.dibatalkan_oleh == 'Peminjam' %}
+                                {% if is_peminjam %}
+                                    saya
+                                {% else %}
+                                    @{{ transaksi.peminjam.username }}
+                                {% endif %}
+                            {% else %}
+                                {% if is_peminjam %}
+                                    @{{ transaksi.pemilik.username }}
+                                {% else %}
+                                    saya
+                                {% endif %}
+                            {% endif %}
+                            {% if transaksi.dibatalkan_pada %}
+                                pada {{ transaksi.dibatalkan_pada|date:"d M Y, H:i" }}
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <p class="status-text sedang-menunggu">{{ transaksi.get_status_display }}</p>
+                    {% endif %}
+
+                    <p class="transaction-info"> Durasi: {{ durasi }} hari</p>
+                    <p class="transaction-info"> Total harga: Rp{{ total_harga|floatformat:"0g" }}</p>
+                    {% if transaksi.status == 'ditolak' and transaksi.catatan_penolakan %}
+                        <div class="riwayat-empty">
+                            <strong>Alasan penolakan</strong>
+                            <p>
+                                {{ transaksi.catatan_penolakan|linebreaksbr }}
+                            </p>
+                        </div>
+                    {% endif %}
+                    <!-- {% if transaksi.bukti_pembayaran %}
+                        <p class="barang-title mt-3">Bukti pembayaran</p>
+                        <img src="{{ transaksi.bukti_pembayaran.url }}" alt="Bukti pembayaran" class="transaksi-image">
+                    {% endif %} -->
+                </div>
+        </section>
+    </div>
+</main>
+{% endblock content %}

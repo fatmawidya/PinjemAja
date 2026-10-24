@@ -69,7 +69,7 @@ def riwayat_meminjam(request):
     
 # @login_required
 def permintaan_masuk(request):
-    transaksi_list = (Transaksi.objects.filter(pemilik=request.user).select_related("barang", "peminjam").order_by("-created_at"))
+    transaksi_list = (Transaksi.objects.filter(pemilik=request.user).select_related("barang", "peminjam",).order_by("-created_at"))
     status_filter = request.GET.get("status", "semua")
     status_map = {
             "berlangsung": [
@@ -93,5 +93,48 @@ def permintaan_masuk(request):
     }
 
     return render(request, "permintaan_masuk.html", context)
+
+# @login_required
+def upload_bukti(request, transaksi_id):
+    transaksi = get_object_or_404(
+        Transaksi.objects.select_related("barang", "pemilik"),
+        pk=transaksi_id,
+        peminjam=request.user,
+        status="menunggu_pembayaran",
+    )
+    form = FormUploadBukti(request.POST or None, request.FILES or None, instance=transaksi)
+
+    if request.method == "POST" and form.is_valid():
+        transaksi = form.save(commit=False)
+        transaksi.status = "menunggu_konfirmasi"
+        transaksi.save()
+        messages.success(request, "Bukti pembayaran berhasil dikirim.")
+        return redirect("transaction:detail_transaksi", transaksi_id=transaksi.pk)
+
+    durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
+
+    return render(request, "upload_bukti.html", {
+        "transaksi": transaksi,
+        "form": form,
+        "durasi": durasi,
+        "total_harga": transaksi.barang.price * durasi,
+    })
+
+
+# @login_required
+def detail_transaksi(request, transaksi_id):
+    transaksi = get_object_or_404 (Transaksi.objects.select_related("barang", "peminjam", "pemilik"), pk=transaksi_id)
+
+    if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect("transaction:riwayat_meminjam")
+
+    durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
+    return render(request, "detail_transaksi.html", {
+        "transaksi": transaksi,
+        "durasi": durasi,
+        "total_harga": transaksi.barang.price * durasi,
+        "is_peminjam": request.user == transaksi.peminjam,
+    })
 
 
