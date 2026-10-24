@@ -118,9 +118,7 @@ def upload_bukti(request, transaksi_id):
         "transaksi": transaksi,
         "form": form,
         "durasi": durasi,
-        "total_harga": transaksi.barang.price * durasi,
     })
-
 
 # @login_required
 def detail_transaksi(request, transaksi_id):
@@ -134,7 +132,6 @@ def detail_transaksi(request, transaksi_id):
     return render(request, "detail_transaksi.html", {
         "transaksi": transaksi,
         "durasi": durasi,
-        "total_harga": transaksi.barang.price * durasi,
         "is_peminjam": request.user == transaksi.peminjam,
     })
 
@@ -221,5 +218,34 @@ def aksi(request, transaksi_id):
 
     messages.success(request, f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".')
     return redirect(redirect_url)
+
+def edit_bukti(request, transaksi_id):
+    transaksi = get_object_or_404(
+            Transaksi,
+            pk=transaksi_id,
+            peminjam=request.user,
+            status='menunggu_konfirmasi',
+        )
+
+    if request.method == 'POST':
+        form = FormUploadBukti(request.POST, request.FILES, instance=transaksi)
+        if form.is_valid():
+            transaksi= form.save()
+            messages.success(request, 'Bukti pembayaran berhasil diperbarui.')
+            return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
+
+    else:
+        form = FormUploadBukti(instance=transaksi)
+
+    durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
+
+    return render(request, 'upload_bukti.html', {
+        'form': form,
+        'transaksi': transaksi,
+        # info_bank : transaksi.profil.bank hrsnya tp blm ada
+        "durasi": durasi,
+        'is_edit': True,
+    })
+    
 
 
