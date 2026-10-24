@@ -28,6 +28,7 @@ class Transaksi(models.Model):
     tanggal_mulai = models.DateField()
     tanggal_selesai = models.DateField()
     status = models.CharField(max_length=30, choices=STATUS, default='menunggu_verifikasi')
+    total_harga = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 #     form
     bukti_pembayaran = models.ImageField(upload_to='bukti/', null=True, blank=True)
     metode_pengambilan = models.CharField( max_length=20, choices=METODE, default='ambil_sendiri')
@@ -36,3 +37,15 @@ class Transaksi(models.Model):
     dibatalkan_oleh = models.CharField(max_length=20, blank=True)
     dibatalkan_pada = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+def hitung_total(self):
+    durasi = (self.tanggal_selesai - self.tanggal_mulai).days + 1
+    if durasi <= 0:
+        return 0
+    return self.barang.price * durasi
+
+def save(self, *args, **kwargs):
+    if self.barang_id and self.tanggal_mulai and self.tanggal_selesai:
+        self.total_harga = self.hitung_total()
+    super().save(*args, **kwargs)
+

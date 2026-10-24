@@ -12,9 +12,9 @@
             <div class="container">
                 <div class="row justify-content-center">
                 <div class="col-12 col-lg-9">
-                    <h1 class="transaction-title mb-5 text-center">Form Pengajuan</h1>
+                    <h1 class="transaction-title mb-5 text-center">{% if is_edit %}Edit Transaksi{% else %}Form Pengajuan{% endif %}</h1>
                         <form method="post"
-                            action="{% url 'transaction:form_pinjam' barang.id %}"
+                            action="{% if is_edit %}{% url 'transaction:edit_transaksi' transaksi.id %}{% else %}{% url 'transaction:form_pinjam' barang.id %}{% endif %}"
                             class="request-form">
                             {% csrf_token %}
                             {% for field in form %}
@@ -29,21 +29,28 @@
                                 </div>
                             {% endfor %}
                             <div class="row mb-4 align-items-center">
-                                <label class="col-md-3 col-form-label text-md-end fw-semibold">Total biaya </label>
+                                <label class="col-md-3 col-form-label text-md-end fw-semibold">Harga Barang/Hari </label>
                                 <div class="col-md-9">
                                     <span class="total-price">Rp {{ barang.price }}</span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-9 offset-md-3 d-flex gap-3">
-                                    <button type="submit" class="button btn-warning flex-fill text-center">Kirim Pengajuan</button>
-                                    <a href="{% url 'item:item_detail' barang.id %}" class="button btn-secondary flex-fill text-center">Batalkan</a>
+                                    <button type="submit" class="button btn-warning flex-fill text-center">
+                                        {% if is_edit %}
+                                            Simpan Perubahan
+                                        {% else %}
+                                            Kirim Pengajuan
+                                        {% endif %}
+                                    </button>
+                                    <a href="{% if is_edit %}{% url 'transaction:riwayat_meminjam'%} {% else  %} {% url 'item:item_detail' barang.id %} {% endif %}" 
+                                    class="button btn-secondary flex-fill text-center">Batalkan</a>
                                 </div>
                             </div>
                         </form>
+                    </div>
                 </div>
-                </div>
-                </div>
+            </div>
         </section>
     </main>
 {% endblock content %}

@@ -62,15 +62,15 @@
                             </p>
 
                             <p class="status-text
-                                {% if transaksi.status == 'selesai' %}status-selesai
-                                {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %}status-batal
+                                {% if transaksi.status == 'selesai' %} status-selesai
+                                {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %} status-batal
                                 {% else %}status-menunggu{% endif %}">
                                 {{ transaksi.get_status_display }}
                             </p>
 
                             {% if transaksi.status == "menunggu_pembayaran" %}
-                                <a href="#" class="btn transaksi-action action-primary">
-                                    Lihat Pembayaran
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-primary">
+                                    Lihat Detail
                                 </a>
 
                             {% elif transaksi.status == "menunggu_verifikasi" %}
@@ -83,7 +83,7 @@
                                 </form>
 
                             {% else %}
-                                <a href="#" class="btn transaksi-action action-outline">
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
                                     Lihat Detail
                                 </a>
                             {% endif %}
