@@ -81,16 +81,25 @@
                                         Batalkan
                                     </button>
                                 </form>
+
+                            {% if transaksi.status == "menunggu_pembayaran" %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
+                                    > Lihat Detail
+                                </a>
+                                <a href="{% url 'transaction:upload_bukti' transaksi.id %}"
+                                    class="btn transaksi-action action-primary">
+                                    Unggah Bukti
+                                </a>
                             
                             {% elif transaksi.status == "ditolak" %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
+                                    > Lihat Detail
+                                </a>
                                 <form method="post" action="{% url 'transaction:aksi' transaksi.id %}">
                                     {% csrf_token %}
                                     <button type="submit" name="aksi" value="kirim_ulang" class="btn action-primary">Kirim Ulang</button>
                                 </form>
-                            
-                            {% elif transaksi.status == "menunggu_konfirmasi" %}
-                                
-
+                        
                             {% else %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
                                     Lihat Detail
