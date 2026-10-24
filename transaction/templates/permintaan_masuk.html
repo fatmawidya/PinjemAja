@@ -74,11 +74,18 @@
                                 </a>
 
                             {% elif transaksi.status == "menunggu_verifikasi" %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="">
+                                        > Lihat Detail
+                                </a>
                                 <form method="post">
                                     {% csrf_token %}
                                     <button type="submit"
                                             class="btn transaksi-action action-danger">
-                                        Batalkan
+                                        Tolak
+                                    </button>
+                                    <button type="submit"
+                                            class="btn transaksi-action action-primary">
+                                        Terima
                                     </button>
                                 </form>
 

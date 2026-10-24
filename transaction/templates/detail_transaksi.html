@@ -10,6 +10,9 @@
 <main class="transaksi-page py-5">
     <div class="container-xl">
         <section class="transaction-panel p-3 p-md-4 p-lg-5">
+            <a class="btn btn-link" href="{% if is_peminjam %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'transaction:permintaan_masuk' %}{% endif %}">
+                ← Kembali
+            </a>
             <h1 class="transaction-title text-center mb-4">Detail Transaksi</h1>
                 {% if transaksi.barang.cover_image %}
                     <img
@@ -83,10 +86,11 @@
                         </p>
                     {% else %}
                         <p class="status-text sedang-menunggu">{{ transaksi.get_status_display }}</p>
+
                     {% endif %}
 
                     <p class="transaction-info"> Durasi: {{ durasi }} hari</p>
-                    <p class="transaction-info"> Total harga: Rp{{ total_harga|floatformat:"0g" }}</p>
+                    <p class="transaction-info"> Total harga: Rp{{ total_harga }}</p>
                     {% if transaksi.status == 'ditolak' and transaksi.catatan_penolakan %}
                         <div class="riwayat-empty">
                             <strong>Alasan penolakan</strong>
@@ -99,9 +103,23 @@
                         <p class="barang-title mt-3">Bukti pembayaran</p>
                         <img src="{{ transaksi.bukti_pembayaran.url }}" alt="Bukti pembayaran" class="transaksi-image">
                     {% endif %} -->
-                    <a class="btn btn-link" href="{% if is_peminjam %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'transaction:permintaan_masuk' %}{% endif %}">
-                        ← Kembali
+                    {% if is_peminjam and transaksi.status == 'menunggu_verifikasi'%}
+                    <a class="btn edit-transaksi" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
+                        Edit Transaksi
                     </a>
+                    {% elif transaksi.status == 'menunggu_verifikasi'}
+                    <form method="post" action="{% url 'transaction:permintaan_masuk' %}">
+                        <button type="submit" name="aksi"
+                            class="btn transaksi-action action-danger">
+                            Tolak
+                        </button>
+                        <button type="submit" name="aksi"
+                            class="btn transaksi-action action-primary">
+                        Terima
+                        </button>
+                    </form>
+                    {% endif %}
+
                 </div>
         </section>
     </div>
