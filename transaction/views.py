@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.urls import reverse
 
 from .models import Transaksi
 from item.models import Item
@@ -171,5 +172,54 @@ def edit_transaksi(request, transaksi_id):
         'barang': transaksi.barang,
         'is_edit': True,
     })
+
+@login_required
+@require_POST
+def aksi(request, transaksi_id):
+    transaksi = get_object_or_404(Transaksi, pk=transaksi_id)
+    action = request.POST.get('aksi')
+
+    if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
+        messages.error(request, 'Anda tidak memiliki akses.')
+        return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
+
+    if transaksi.peminjam_id:
+        redirect_url = reverse('transaction:riwayat_meminjam')
+    elif transaksi.pemilik_id:
+        redirect_url = reverse('transaction:permintaan_masuk')
+    else:
+        redirect_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
+    
+    # tombol
+    transitions = {
+        ('menunggu_verifikasi', 'batal', False): ('dibatalkan', 'Peminjam'),
+        ('menunggu_verifikasi', 'batal', True):  ('dibatalkan', 'Pemilik'),
+        ('menunggu_verifikasi', 'terima', True):    ('menunggu_pembayaran', None),
+        ('menunggu_konfirmasi', 'tolak', True):     ('ditolak', None),
+        ('menunggu_konfirmasi', 'terima', True):    ('disetujui', None),
+        ('ditolak', 'kirim_ulang', False):          ('menunggu_verifikasi', None),
+    }
+
+    result = transitions.get((transaksi.status, action, transaksi.pemilik_id))
+
+    if not result:
+        messages.error(request, 'Aksi tidak tersedia untuk status ini.')
+        return redirect(redirect_url)
+
+    alasan = request.POST.get('alasan', '').strip()
+    if action == 'tolak' and not alasan:
+        messages.error(request, 'Alasan penolakan wajib diisi.')
+        return redirect(redirect_url)
+
+    transaksi.status = result[0]
+    if result[1]:
+        transaksi.dibatalkan_oleh = result[1]
+        transaksi.dibatalkan_pada = timezone.now()
+    if action == 'tolak':
+        transaksi.catatan_penolakan = alasan
+    transaksi.save()
+
+    messages.success(request, f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".')
+    return redirect(redirect_url)
 
 
