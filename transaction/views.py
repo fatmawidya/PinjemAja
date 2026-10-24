@@ -137,4 +137,39 @@ def detail_transaksi(request, transaksi_id):
         "is_peminjam": request.user == transaksi.peminjam,
     })
 
+@login_required
+def edit_transaksi(request, transaksi_id):
+    transaksi = get_object_or_404(
+        Transaksi,
+        pk=transaksi_id,
+        peminjam=request.user,
+        status='menunggu_verifikasi',
+    )
+
+    if request.method == 'POST':
+        form = FormPinjam(request.POST, instance=transaksi)
+        if form.is_valid():
+            transaksi = form.save(commit=False)
+
+            if transaksi.tanggal_mulai < timezone.localdate():
+                form.add_error('tanggal_mulai', 'Tanggal mulai tidak boleh di masa lalu.')
+            elif transaksi.tanggal_selesai < transaksi.tanggal_mulai:
+                form.add_error('tanggal_selesai', 'Tanggal selesai harus setelah tanggal mulai.')
+            else:
+                durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
+                transaksi.total_harga = transaksi.barang.price * durasi
+                transaksi.save()
+
+                messages.success(request, 'Transaksi berhasil diperbarui.')
+                return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
+    else:
+        form = FormPinjam(instance=transaksi)
+
+    return render(request, 'form_pinjam.html', {
+        'form': form,
+        'transaksi': transaksi,
+        'barang': transaksi.barang,
+        'is_edit': True,
+    })
+
 

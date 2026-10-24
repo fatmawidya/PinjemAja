@@ -99,6 +99,9 @@
                         <p class="barang-title mt-3">Bukti pembayaran</p>
                         <img src="{{ transaksi.bukti_pembayaran.url }}" alt="Bukti pembayaran" class="transaksi-image">
                     {% endif %} -->
+                    <a class="btn btn-link" href="{% if is_peminjam %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'transaction:permintaan_masuk' %}{% endif %}">
+                        ← Kembali
+                    </a>
                 </div>
         </section>
     </div>
