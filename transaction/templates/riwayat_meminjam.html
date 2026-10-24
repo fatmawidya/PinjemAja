@@ -70,22 +70,26 @@
                                 {{ transaksi.get_status_display }}
                             </p>
 
-                            {% if transaksi.status == "menunggu_pembayaran" %}
-                                <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn transaksi-action action-primary">
-                                    Upload Bukti
-                                </a>
-
-                            {% elif transaksi.status == "menunggu_verifikasi" %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="">
+                            {% if transaksi.status == "menunggu_verifikasi" %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
                                     > Lihat Detail
                                 </a>
-                                <form method="post">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}">
                                     {% csrf_token %}
-                                    <button type="submit"
+                                    <button type="submit"  name="aksi" value="batalkan"
                                             class="btn transaksi-action action-danger">
                                         Batalkan
                                     </button>
                                 </form>
+                            
+                            {% elif transaksi.status == "ditolak" %}
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="aksi" value="kirim_ulang" class="btn action-primary">Kirim Ulang</button>
+                                </form>
+                            
+                            {% elif transaksi.status == "menunggu_konfirmasi" %}
+                                
 
                             {% else %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">

@@ -103,21 +103,59 @@
                         <p class="barang-title mt-3">Bukti pembayaran</p>
                         <img src="{{ transaksi.bukti_pembayaran.url }}" alt="Bukti pembayaran" class="transaksi-image">
                     {% endif %} -->
-                    {% if is_peminjam and transaksi.status == 'menunggu_verifikasi'%}
-                    <a class="btn edit-transaksi" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
-                        Edit Transaksi
-                    </a>
-                    {% elif transaksi.status == 'menunggu_verifikasi'}
-                    <form method="post" action="{% url 'transaction:permintaan_masuk' %}">
-                        <button type="submit" name="aksi"
-                            class="btn transaksi-action action-danger">
-                            Tolak
-                        </button>
-                        <button type="submit" name="aksi"
-                            class="btn transaksi-action action-primary">
-                        Terima
-                        </button>
-                    </form>
+
+                    {% if is_peminjam %}
+                        {% if transaksi.status == 'menunggu_verifikasi'%}
+                            <a class="btn edit-transaksi" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
+                                Edit Transaksi
+                            </a>
+                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" name="aksi" value="batalkan"
+                                        class="btn transaksi-action action-danger">
+                                    Batalkan
+                                </button>
+                            </form>
+                        {% elif transaksi.status == 'menunggu_pembayaran' %}
+                            <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn transaksi-action action-primary">
+                                Upload Bukti
+                            </a>
+                        {% elif transaksi.status == 'ditolak' %}
+                        <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" name="aksi" value="kirim_ulang"
+                                    class="btn transaksi-action action-primary">
+                                Kirim Ulang
+                            </button>
+                        </form>
+                        {%endif%}
+                        
+                    {% elif %}
+                        {% if transaksi.status == 'menunggu_verifikasi' %}
+                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="aksi" value="batal"
+                                    class="btn transaksi-action action-danger">
+                                    Tolak
+                                </button>
+                                <button type="submit" name="aksi" value="terima"
+                                    class="btn transaksi-action action-primary">
+                                Terima
+                                </button>
+                            </form>
+                        {% elif transaksi.status == 'menunggu_konfirmasi' %}
+                        <form method="post" action="{% url 'transaction:aksi' transaksi.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="aksi" value="tolak"
+                                class="btn transaksi-action action-danger">
+                                Tolak
+                            </button>
+                            <button type="submit" name="aksi" value="terima"
+                                class="btn transaksi-action action-primary">
+                            Terima
+                            </button>
+                        </form>
+                        {% endif %}
                     {% endif %}
 
                 </div>

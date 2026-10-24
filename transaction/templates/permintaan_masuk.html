@@ -68,12 +68,7 @@
                                 {{ transaksi.get_status_display }}
                             </p>
 
-                            {% if transaksi.status == "menunggu_pembayaran" %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-primary">
-                                    Lihat Detail
-                                </a>
-
-                            {% elif transaksi.status == "menunggu_verifikasi" %}
+                            {% if transaksi.status == "menunggu_verifikasi" %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="">
                                         > Lihat Detail
                                 </a>
@@ -88,6 +83,11 @@
                                         Terima
                                     </button>
                                 </form>
+                            <!-- tambahin css action green tuh -->
+                            {% elif transaksi.status == "menunggu_konfirmasi" %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-green">
+                                    Lihat Bukti
+                                </a>
 
                             {% else %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
