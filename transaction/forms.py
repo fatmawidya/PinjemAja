@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Transaksi
 
 class FormPinjam(forms.ModelForm):
@@ -13,16 +14,15 @@ class FormPinjam(forms.ModelForm):
         labels = {
             "tanggal_mulai": "Tanggal Pinjam",
             "tanggal_selesai": "Tanggal Kembali",
-            "metode_pengembalian": "Metode Pengembalian",
+            "metode_pengambilan": "Metode Pengambilan",
             "pesan_peminjam": "Pesan untuk Pemilik"
         }
-
         widgets = {
-            'tanggal_mulai': forms.DateInput (attrs={'type': 'date', 'class': 'form-control'}),
-            'tanggal_selesai': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'metode_pengambilan': forms.Select(attrs={'class': 'form-select-input'}),
-            'pesan_peminjam': forms.Textarea(attrs={'rows': 3, 'placeholder':'Tambahkan jika ada (optional)', 'class': 'form-control'}),
-        }
+                    'tanggal_mulai': forms.DateInput (attrs={'type': 'date', 'class': 'form-control'}),
+                    'tanggal_selesai': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+                    'metode_pengambilan': forms.Select(attrs={'class': 'form-select-input'}),
+                    'pesan_peminjam': forms.Textarea(attrs={'rows': 3, 'placeholder':'Tambahkan jika ada (optional)', 'class': 'form-control'}),
+                }
 
 class FormUploadBukti(forms.ModelForm):
     class Meta:

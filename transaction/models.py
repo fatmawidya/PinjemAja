@@ -9,7 +9,7 @@ class Transaksi(models.Model):
         ('menunggu_pembayaran', 'Menunggu Pembayaran'),
         ('menunggu_konfirmasi', 'Menunggu Konfirmasi'),
         ('ditolak', 'Ditolak'),
-        ('disetujui', 'Disetujui'),
+        ('disetujui', 'Sedang Berlangsung'),
         ('selesai', 'Selesai'),
         ('dibatalkan', 'Dibatalkan'),
         ]
@@ -33,4 +33,6 @@ class Transaksi(models.Model):
     metode_pengambilan = models.CharField( max_length=20, choices=METODE, default='ambil_sendiri')
     pesan_peminjam = models.TextField (blank=True, help_text="Pesan opsional buat pemilik")
     catatan_penolakan = models.TextField(blank=True)
+    dibatalkan_oleh = models.CharField(max_length=20, blank=True)
+    dibatalkan_pada = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
