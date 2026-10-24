@@ -3,98 +3,100 @@
 
 {% block meta %}
     <title>Peminjaman Barang Saya - PinjemAja</title>
-    <link rel="stylesheet" href="{% static 'css/transaction.css' %}">
+    <link rel="stylesheet" href="/static/css/transaction.css">
 {% endblock meta %}
 
 {% block content %}
-<div class="request-container-fluid py-4">
-    <h1 class="request-title">Permintaan Masuk</h1>
-    <nav class="request-filters">
-        <a href="?status=semua" class="filter-btn {% if status_filter == 'semua' %}active{% endif %}">
-            Semua
-        </a>
+<main class="transaksi-page py-5">
+    <div class="container-xl">
+        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+            <h1 class="transaction-title text-center mb-4">Permintaan Masuk</h1>
+            <nav class="transaction-filters d-flex flex-wrap justify-content-center gap-2 mb-4">
+                <a href="?status=semua" class="btn filter-btn {% if status_filter == 'semua' %}active{% endif %}">
+                    Semua
+                </a>
 
-        <a href="?status=berlangsung" class="filter-btn {% if status_filter == 'berlangsung' %} active {% endif %}"> 
-            Berlangsung
-        </a>
+                <a href="?status=berlangsung" class="btn filter-btn {% if status_filter == 'berlangsung' %}active{% endif %}">
+                    Berlangsung
+                </a>
 
-        <a href="?status=selesai"
-            class="filter-btn {% if status_filter == 'selesai' %}active{% endif %}">
-            Selesai
-        </a>
+                <a href="?status=selesai"
+                    class="btn filter-btn {% if status_filter == 'selesai' %}active{% endif %}">
+                    Selesai
+                </a>
 
-        <a href="?status=dibatalkan"
-            class="filter-btn {% if status_filter == 'dibatalkan' %}active{% endif %}">
-            Dibatalkan
-        </a>
-    </nav>
+                <a href="?status=dibatalkan"
+                    class="btn filter-btn {% if status_filter == 'dibatalkan' %}active{% endif %}">
+                    Dibatalkan
+                </a>
+            </nav>
 
-    <div class="request-grid">
-        {% for transaksi in transaksi_list %}
-            <article class="transaksi-card">
-                {% if transaksi.barang.cover_image %}
-                    <img
-                        src="{{ transaksi.barang.cover_image.image.url }}"
-                        alt="{{ transaksi.barang.title }}"
-                        class="transaksi-image"
-                    >
-                {% else %}
-                    <div class="transaksi-image image-placeholder">
-                        Gambar<br>Katalog
-                    </div>
-                {% endif %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {% for transaksi in transaksi_list %}
+                    <div class="col"><article class="transaksi-card h-100">
+                        {% if transaksi.barang.cover_image %}
+                            <img
+                                src="{{ transaksi.barang.cover_image.image.url }}"
+                                alt="{{ transaksi.barang.name }}"
+                                class="transaksi-image"
+                            >
+                        {% else %}
+                            <div class="transaksi-image image-placeholder">
+                                Gambar<br>Katalog
+                            </div>
+                        {% endif %}
 
-                <div class="transaksi-body">
-                    <h2 class="barang-title">
-                        {{ transaksi.barang.name }}
-                    </h2>
+                        <div class="transaksi-body">
+                            <h2 class="barang-title">
+                                {{ transaksi.barang.name }}
+                            </h2>
 
-                    <p class="barang-peminjam">
-                        {{ transaksi.peminjam }}
-                    </p>
+                            <p class="barang-peminjam">
+                                {{ transaksi.peminjam }}
+                            </p>
 
-                    <p class="tanggal-transaksi">
-                        {{ transaksi.tanggal_mulai|date:"d M Y" }}
-                        –
-                        {{ transaksi.tanggal_selesai|date:"d M Y" }}
-                    </p>
+                            <p class="tanggal-transaksi">
+                                {{ transaksi.tanggal_mulai|date:"d M Y" }}
+                                –
+                                {{ transaksi.tanggal_selesai|date:"d M Y" }}
+                            </p>
 
-                    <p class="status-text
-                        {% if transaksi.status == 'selesai' %}status-selesai
-                        {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %}status-batal
-                        {% else %}status-menunggu{% endif %}">
-                        {{ transaksi.get_status_display }}
-                    </p>
+                            <p class="status-text
+                                {% if transaksi.status == 'selesai' %}status-selesai
+                                {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %}status-batal
+                                {% else %}status-menunggu{% endif %}">
+                                {{ transaksi.get_status_display }}
+                            </p>
 
-                    {% if transaksi.status == "menunggu_pembayaran" %}
-                        <a href=#>
-                            class="transaksi-action action-primary">
-                            Lihat Pembayaran
-                        </a>
+                            {% if transaksi.status == "menunggu_pembayaran" %}
+                                <a href="#" class="btn transaksi-action action-primary">
+                                    Lihat Pembayaran
+                                </a>
 
-                    {% elif transaksi.status == "menunggu_verifikasi" %}
-                        <form method="post">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="transaksi-action action-danger">
-                                Batalkan
-                            </button>
-                        </form>
+                            {% elif transaksi.status == "menunggu_verifikasi" %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn transaksi-action action-danger">
+                                        Batalkan
+                                    </button>
+                                </form>
 
-                    {% else %}
-                        <a href=#>
-                            class="transaksi-action action-outline">
-                            Lihat Detail
-                        </a>
-                    {% endif %}
-                </div>
-            </article>
-        {% empty %}
-            <div class="request-empty">
-                <h3>Belum ada transaksi</h3>
-                <p>Transaksi peminjaman kamu akan muncul di sini.</p>
+                            {% else %}
+                                <a href="#" class="btn transaksi-action action-outline">
+                                    Lihat Detail
+                                </a>
+                            {% endif %}
+                        </div>
+                    </article></div>
+                {% empty %}
+                    <div class="col-12"><div class="request-empty">
+                        <h3>Belum ada permintaan</h3>
+                        <p>Permintaan pinjam barang kamu akan muncul di sini.</p>
+                    </div></div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </section>
     </div>
-</div>
+</main>
 {% endblock %}
