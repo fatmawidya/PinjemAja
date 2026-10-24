@@ -1,75 +1,193 @@
-/* Form */
-body {
-    font-family: 'Poppins', sans-serif;
-    background: #F4EFE6;
-    color: #184136;
-}
-
-.btn-warning {
-    background: #F3B216;
-    border-color: #F3B216;
-    color: #184136;
-    font-weight: 600;
-    font-size: 18px;
-    padding: 10px 24px;
-    border-radius: 8px;
-    transition: transform 0.5s ease, background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.btn-warning:hover {
-    background: #d99e0d;
-    border-color: #d99e0d;
-    color: #184136;
-    transform: scale(1.05);
-}
-
-.btn-secondary {
-    background: #C81010;
-    border-color: #C81010;
-    color: #F4EFE6;
-    font-weight: 600;
-    font-size: 18px;
-    padding: 10px 24px;
-    border-radius: 8px;
-    transition: transform 0.5s ease, background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background: #a50d0d;
-    border-color: #a50d0d;
-    color: #F4EFE6;
-    transform: scale(1.05);
-}
-
-.page-title {
-    font-weight: 700;
-    font-size: 48px;
-    line-height: 72px;
-    color: #184136;
-    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+:root {
+    --pa-cream: #F4EFE6;
+    --pa-green: #184136;
+    --pa-green-dark: #123329;
+    --pa-yellow: #F3B216;
+    --pa-yellow-light: #ccae62;
+    --pa-red: #C81010;
+    --pa-white: #FFFFFF;
+    --pa-muted: #6B756F;
+    --pa-border: #E2DCCF;
 }
 
 .form-control {
-    border: 2px solid #184136;
+    border: 2px solid var(--pa-green);
     border-radius: 8px;
     padding: 10px 16px;
-    color: #184136;
+    color: var(--pa-green);
 }
 
 .form-control:focus {
-    border-color: #184136;
+    border-color: var(--pa-green);
     box-shadow: 0 0 0 0.2rem rgba(12, 104, 63, 0.25);
 }
 
 .form-select-input {
-    border: 2px solid #184136;
+    border: 2px solid var(--pa-green);
     border-radius: 8px;
     padding: 10px 25px;
-    color: #184136;
+    color: var(--pa-green);
 }
 
 .form-select-input:hover {
-    border-color: #184136;
+    border-color: var(--pa-green);
+}
+
+.transaksi-page {
+    min-height: calc(100vh - 80px);
+    background-color: var(--pa-green);
+}
+
+.transaction-panel {
+    min-height: 70vh;
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: var(--pa-cream);
+    border: 1px solid var(--pa-yellow);
+    border-radius: 16px;
+}
+
+.transaction-title {
+    color: var(--pa-green);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    text-shadow: 0 3px 3px rgba(0, 0, 0, .18);
+}
+
+.transaction-filters .filter-btn {
+    min-width: 140px;
+    border: 1px solid var(--pa-green);
+    color: var(--pa-green);
+    font-weight: 600;
+}
+
+.transaction-filters .filter-btn:hover,
+.transaction-filters .filter-btn.active {
+    background: var(--pa-yellow);
+    border-color: var(--pa-green);
+    color: var(--pa-green);
+}
+
+.transaksi-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background-color: var(--pa-white);
+    border-radius: 14px;
+    box-shadow: 3px 5px 7px rgba(0, 0, 0, .2);
+}
+
+.transaksi-image {
+    width: 100%;
+    aspect-ratio: 1.2 / 1;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 9px;
+    background: var(--pa-green);
+}
+
+.image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pa-cream);
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.transaksi-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding-top: 10px;
+}
+
+.barang-title { 
+    margin: 0; 
+    font-size: 1.1rem; 
+    font-weight: 700; 
+}
+
+.barang-owner, .barang-peminjam { 
+    margin: 2px 0; 
+    font-weight: 600; 
+}
+
+.tanggal-transaksi { 
+    margin: 2px 0 8px; 
+    color: #555; 
+    font-size: .9rem; 
+}
+
+.status-text { 
+    margin: 8px 0; 
+    color: var(--pa-yellow-light); 
+    font-size: .9rem; 
+    font-weight: 600; 
+}
+
+.status-selesai { 
+    color: var(--pa-green); 
+}
+
+.status-ditolak, .status-dibatalkan, .status-batal { 
+    color: var(--pa-red); 
+}
+
+.transaksi-action { 
+    width: 100%; 
+    padding: 7px 12px; 
+    font-weight: 600; 
+}
+
+.action-primary { 
+    background: var(--pa-yellow); 
+    border-color: var(--pa-yellow); 
+    color: var(--pa-green); 
+}
+
+.action-primary:hover { 
+    background: var(--pa-yellow-light); 
+    border-color: var(--pa-yellow-light); 
+    color: var(--pa-green); 
+}
+
+.action-danger { 
+    background: var(--pa-red); 
+    border-color: var(--pa-red); 
+    color: var(--pa-white); 
+}
+
+.action-danger:hover { 
+    background: #a50d0d; 
+    border-color: #a50d0d; 
+    color: var(--pa-white); 
+}
+
+.action-outline { 
+    border: 1px solid #888;
+    color: #666; 
+}
+
+.riwayat-empty, .request-empty { 
+    padding: 3rem 1rem; 
+    color: var(--pa-muted); 
+    text-align: center; 
+}
+
+.request-form .form-control,
+.request-form .form-select,
+.request-form .form-select-input { 
+    width: 100%; 
+}
+
+.transaksi-page .transaction-panel {
+    background-color: var(--pa-cream);
+}
+
+.transaksi-page .transaksi-card {
+    background-color: var(--pa-white);
 }
 
 
