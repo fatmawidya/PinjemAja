@@ -20,7 +20,7 @@ class FormPinjam(forms.ModelForm):
         widgets = {
                     'tanggal_mulai': forms.DateInput (attrs={'type': 'date', 'class': 'form-control'}),
                     'tanggal_selesai': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-                    'metode_pengambilan': forms.Select(attrs={'class': 'form-select-input'}),
+                    'metode_pengambilan': forms.Select(attrs={'class': 'form-select'}),
                     'pesan_peminjam': forms.Textarea(attrs={'rows': 3, 'placeholder':'Tambahkan jika ada (optional)', 'class': 'form-control'}),
                 }
 
