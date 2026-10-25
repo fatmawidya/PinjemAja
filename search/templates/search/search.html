@@ -1,0 +1,949 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Pencarian & Filter Barang - PinjemAja</title>
+<!-- Poppins Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Item stylesheet for fallback styles -->
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+
+<style>
+    /* Styling Khusus Modul Pencarian & Filter Joceline */
+    :root {
+        --color-brand-primary: #184136;
+        --color-brand-yellow: #F3B216;
+        --color-brand-cream: #F4EFE6;
+        --color-brand-bg: #F8F6F0;
+        --color-brand-dark: #1F2937;
+        --color-brand-muted: #6B7280;
+        --color-brand-border: #E5E7EB;
+        --color-brand-danger: #DC2626;
+        --color-brand-white: #FFFFFF;
+    }
+
+    body, .pa-search-page {
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    .pa-search-page {
+        padding: 32px 0 80px;
+        background-color: var(--color-brand-bg);
+        min-height: 80vh;
+    }
+
+    .search-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+
+    @media (max-width: 991px) {
+        .search-layout {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+    }
+
+    /* === SISI KIRI: PANEL FILTER === */
+    .filter-panel {
+        background: var(--color-brand-white);
+        border: 1px solid var(--color-brand-border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(24, 65, 54, 0.05);
+        position: sticky;
+        top: 90px;
+    }
+
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--color-brand-border);
+        margin-bottom: 20px;
+    }
+
+    .filter-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--color-brand-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+    }
+
+    .btn-reset-filter {
+        background: none;
+        border: none;
+        color: var(--color-brand-danger);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: 0.2s ease;
+    }
+
+    .btn-reset-filter:hover {
+        background-color: #FEE2E2;
+        text-decoration: underline;
+    }
+
+    .filter-group {
+        margin-bottom: 24px;
+    }
+
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-group-title {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--color-brand-dark);
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filter-search-box {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .filter-search-box input {
+        width: 100%;
+        padding: 10px 14px 10px 36px;
+        font-size: 0.88rem;
+        border: 1px solid var(--color-brand-border);
+        border-radius: 8px;
+        outline: none;
+        transition: 0.2s;
+        font-family: inherit;
+    }
+
+    .filter-search-box input:focus {
+        border-color: var(--color-brand-primary);
+        box-shadow: 0 0 0 2px rgba(24, 65, 54, 0.12);
+    }
+
+    .filter-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-brand-muted);
+        pointer-events: none;
+    }
+
+    .filter-options-list {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-options-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .filter-options-list::-webkit-scrollbar-thumb {
+        background: #D1D5DB;
+        border-radius: 4px;
+    }
+
+    .filter-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.88rem;
+        color: var(--color-brand-dark);
+        cursor: pointer;
+        user-select: none;
+        transition: 0.15s;
+    }
+
+    .filter-checkbox-label:hover {
+        color: var(--color-brand-primary);
+    }
+
+    .filter-checkbox-label input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #D1D5DB;
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.15s;
+        flex-shrink: 0;
+    }
+
+    .filter-checkbox-label input[type="checkbox"]:checked {
+        background-color: var(--color-brand-primary);
+        border-color: var(--color-brand-primary);
+    }
+
+    .filter-checkbox-label input[type="checkbox"]:checked::after {
+        content: '';
+        position: absolute;
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        top: 2px;
+    }
+
+    .price-range-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .price-input-box {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        background: #FFFFFF;
+        border: 1px solid var(--color-brand-border);
+        border-radius: 8px;
+        padding: 7px 10px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .price-input-box:focus-within {
+        border-color: var(--color-brand-primary);
+        box-shadow: 0 0 0 2px rgba(24, 65, 54, 0.1);
+    }
+
+    .price-prefix {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-brand-muted);
+        margin-right: 4px;
+        user-select: none;
+    }
+
+    .price-input-box input {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 0.82rem;
+        font-family: inherit;
+        background: transparent;
+        color: var(--color-brand-dark);
+        padding: 0;
+    }
+
+    /* Hilangkan panah spinner bawaan browser pada input number agar tidak bertumpuk */
+    .price-input-box input::-webkit-outer-spin-button,
+    .price-input-box input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .price-input-box input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .price-separator {
+        color: var(--color-brand-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .custom-select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        border: 1px solid var(--color-brand-border);
+        border-radius: 8px;
+        background-color: var(--color-brand-white);
+        color: var(--color-brand-dark);
+        outline: none;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .custom-select:focus {
+        border-color: var(--color-brand-primary);
+    }
+
+    /* === SISI KANAN: HASIL PENCARIAN === */
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .results-count {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--color-brand-primary);
+        margin: 0;
+    }
+
+    .results-count span {
+        color: var(--color-brand-yellow);
+        background: #184136;
+        padding: 2px 10px;
+        border-radius: 12px;
+        margin-right: 4px;
+        font-size: 0.95rem;
+    }
+
+    .active-filters-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .active-tag {
+        background: var(--color-brand-cream);
+        color: var(--color-brand-primary);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .active-tag button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--color-brand-primary);
+        font-weight: bold;
+        padding: 0;
+        font-size: 0.9rem;
+    }
+
+    /* GRID BARANG */
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 20px;
+        transition: opacity 0.2s ease;
+    }
+
+    .items-grid.loading {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* KARTU BARANG (DESIGN SYSTEM CELINE) */
+    .custom-item-card {
+        background: var(--color-brand-white);
+        border: 1px solid var(--color-brand-border);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .custom-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(24, 65, 54, 0.12);
+    }
+
+    .item-card-image-box {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        background-color: #EFEFEF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .item-card-image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .custom-item-card:hover .item-card-image-box img {
+        transform: scale(1.04);
+    }
+
+    .item-placeholder-icon {
+        font-size: 2.5rem;
+        color: var(--color-brand-muted);
+    }
+
+    .item-card-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(24, 65, 54, 0.85);
+        backdrop-filter: blur(4px);
+        color: var(--color-brand-yellow);
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .item-card-body {
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .item-card-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--color-brand-dark);
+        margin: 0 0 6px 0;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .item-card-location {
+        font-size: 0.78rem;
+        color: var(--color-brand-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+
+    .item-card-bottom {
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px dashed var(--color-brand-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .item-card-price-label {
+        font-size: 0.68rem;
+        color: var(--color-brand-muted);
+        margin-bottom: 2px;
+    }
+
+    .item-card-price {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--color-brand-primary); /* Dark Green, BUKAN MERAH sesuai standar Celine */
+    }
+
+    .item-card-price span {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--color-brand-muted);
+    }
+
+    .item-status-pill {
+        background-color: #FEF3C7;
+        color: #92400E;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+    }
+
+    .item-status-pill.tersedia {
+        background-color: #DCFCE7;
+        color: #166534;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--color-brand-white);
+        border-radius: 16px;
+        border: 1px dashed var(--color-brand-border);
+        grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+        display: inline-block;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-brand-primary);
+        margin-bottom: 8px;
+    }
+
+    .empty-desc {
+        color: var(--color-brand-muted);
+        font-size: 0.92rem;
+        max-width: 420px;
+        margin: 0 auto 20px;
+    }
+
+    .btn-empty-reset {
+        display: inline-block;
+        background-color: var(--color-brand-yellow);
+        color: var(--color-brand-primary);
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-empty-reset:hover {
+        background-color: #E5A800;
+        color: var(--color-brand-primary);
+    }
+
+    /* LOADING SPINNER */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        grid-column: 1 / -1;
+    }
+
+    .spinner {
+        width: 36px;
+        height: 36px;
+        border: 4px solid #E5E7EB;
+        border-top-color: var(--color-brand-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock meta %}
+
+{% block content %}
+<main class="pa-search-page">
+    <div class="container">
+        
+        <div class="search-layout">
+            
+            <!-- ================= SISI KIRI: PANEL FILTER ================= -->
+            <aside class="filter-panel">
+                <div class="filter-header">
+                    <h2 class="filter-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Filter Barang
+                    </h2>
+                    <button type="button" id="btn-reset-filters" class="btn-reset-filter">Reset</button>
+                </div>
+
+                <form id="filter-form" onsubmit="return false;">
+                    
+                    <!-- Kata Kunci / Nama Barang -->
+                    <div class="filter-group">
+                        <label class="filter-group-title" for="search-input-field">Kata Kunci</label>
+                        <div class="filter-search-box">
+                            <span class="filter-search-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </span>
+                            <input 
+                                type="text" 
+                                id="search-input-field" 
+                                name="q" 
+                                placeholder="Cari nama barang..." 
+                                value="{{ initial_query }}"
+                                autocomplete="off"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Urutkan Berdasarkan -->
+                    <div class="filter-group">
+                        <label class="filter-group-title" for="sort-select">Urutkan</label>
+                        <select id="sort-select" name="sort" class="custom-select">
+                            <option value="latest">Terbaru</option>
+                            <option value="price_asc">Harga: Termurah</option>
+                            <option value="price_desc">Harga: Termahal</option>
+                            <option value="name_asc">Nama (A - Z)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Kategori -->
+                    <div class="filter-group">
+                        <div class="filter-group-title">
+                            <span>Kategori</span>
+                        </div>
+                        <div class="filter-options-list">
+                            {% for code, name in categories %}
+                            <label class="filter-checkbox-label">
+                                <input 
+                                    type="checkbox" 
+                                    name="category" 
+                                    value="{{ code }}" 
+                                    class="filter-checkbox"
+                                    {% if code in selected_categories %}checked{% endif %}
+                                >
+                                <span>{{ name }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Filter Lokasi -->
+                    <div class="filter-group">
+                        <div class="filter-group-title">
+                            <span>Lokasi Kota</span>
+                        </div>
+                        <div class="filter-search-box">
+                            <span class="filter-search-icon">📍</span>
+                            <input 
+                                type="text" 
+                                id="location-text-input" 
+                                name="location_text" 
+                                placeholder="Ketik nama kota..."
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div class="filter-options-list" style="max-height: 140px;">
+                            {% for loc in locations %}
+                            <label class="filter-checkbox-label">
+                                <input 
+                                    type="checkbox" 
+                                    name="location" 
+                                    value="{{ loc }}" 
+                                    class="filter-checkbox"
+                                >
+                                <span>{{ loc }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Filter Kondisi -->
+                    <div class="filter-group">
+                        <div class="filter-group-title">
+                            <span>Kondisi Barang</span>
+                        </div>
+                        <div class="filter-options-list">
+                            {% for code, name in conditions %}
+                            <label class="filter-checkbox-label">
+                                <input 
+                                    type="checkbox" 
+                                    name="condition" 
+                                    value="{{ code }}" 
+                                    class="filter-checkbox"
+                                >
+                                <span>{{ name }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Filter Rentang Harga -->
+                    <div class="filter-group">
+                        <div class="filter-group-title">
+                            <span>Rentang Harga (Rp)</span>
+                        </div>
+                        <div class="price-range-inputs">
+                            <div class="price-input-box">
+                                <span class="price-prefix">Rp</span>
+                                <input type="number" id="min-price-input" name="min_price" placeholder="Min" min="0">
+                            </div>
+                            <span class="price-separator">-</span>
+                            <div class="price-input-box">
+                                <span class="price-prefix">Rp</span>
+                                <input type="number" id="max-price-input" name="max_price" placeholder="Maks" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </aside>
+
+            <!-- ================= SISI KANAN: HASIL PENCARIAN ================= -->
+            <section class="results-section">
+                
+                <!-- Bar Jumlah Hasil & Status -->
+                <div class="results-header">
+                    <h1 class="results-count">
+                        <span id="items-count-badge">{{ total_items }}</span> Barang Ditemukan
+                    </h1>
+                </div>
+
+                <!-- Active Filter Tags (opsional) -->
+                <div id="active-tags-container" class="active-filters-bar"></div>
+
+                <!-- Loading Spinner -->
+                <div id="ajax-loader" class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p style="font-size: 0.88rem; color: var(--color-brand-muted);">Menyaring barang...</p>
+                </div>
+
+                <!-- Grid Kartu Barang -->
+                <div id="items-grid-container" class="items-grid">
+                    {% if items %}
+                        {% for item in items %}
+                        <a href="{% url 'item:item_detail' item.pk %}" class="custom-item-card">
+                            <div class="item-card-image-box">
+                                {% if item.cover_image %}
+                                    <img src="{{ item.cover_image.image.url }}" alt="{{ item.name }}" loading="lazy">
+                                {% else %}
+                                    <span class="item-placeholder-icon">📦</span>
+                                {% endif %}
+                                <span class="item-card-badge">{{ item.get_category_display }}</span>
+                            </div>
+                            <div class="item-card-body">
+                                <h3 class="item-card-title">{{ item.name }}</h3>
+                                <p class="item-card-location">
+                                    <span>📍</span> {{ item.location }}
+                                </p>
+                                <div class="item-card-bottom">
+                                    <div>
+                                        <div class="item-card-price-label">Sewa per hari</div>
+                                        <div class="item-card-price">
+                                            Rp{{ item.price|floatformat:"0g" }}<span>/hari</span>
+                                        </div>
+                                    </div>
+                                    <span class="item-status-pill {{ item.status }}">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <span class="empty-icon">🔍</span>
+                            <h3 class="empty-title">Belum Ada Barang yang Cocok</h3>
+                            <p class="empty-desc">Coba ubah kata kunci atau longgarkan filter kategorimu untuk menemukan barang lainnya.</p>
+                            <button type="button" class="btn-empty-reset" onclick="resetAllFilters()">Reset Semua Filter</button>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+</main>
+
+<!-- ================= SIHIR AJAX JAVASCRIPT ================= -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterForm = document.getElementById('filter-form');
+    const searchInput = document.getElementById('search-input-field');
+    const locationTextInput = document.getElementById('location-text-input');
+    const sortSelect = document.getElementById('sort-select');
+    const minPriceInput = document.getElementById('min-price-input');
+    const maxPriceInput = document.getElementById('max-price-input');
+    const btnReset = document.getElementById('btn-reset-filters');
+    const gridContainer = document.getElementById('items-grid-container');
+    const countBadge = document.getElementById('items-count-badge');
+    const activeTagsContainer = document.getElementById('active-tags-container');
+
+    let debounceTimer = null;
+
+    // Fungsi Pengumpul Parameter Filter
+    function getFilterParams() {
+        const params = new URLSearchParams();
+
+        // Keyword
+        const q = searchInput.value.trim();
+        if (q) params.append('q', q);
+
+        // Sort
+        const sort = sortSelect.value;
+        if (sort && sort !== 'latest') params.append('sort', sort);
+
+        // Kategori (Checkboxes)
+        const checkedCategories = document.querySelectorAll('input[name="category"]:checked');
+        checkedCategories.forEach(cb => params.append('category', cb.value));
+
+        // Lokasi (Checkboxes + Text)
+        const checkedLocations = document.querySelectorAll('input[name="location"]:checked');
+        checkedLocations.forEach(cb => params.append('location', cb.value));
+        const locText = locationTextInput.value.trim();
+        if (locText) params.append('location', locText);
+
+        // Kondisi
+        const checkedConditions = document.querySelectorAll('input[name="condition"]:checked');
+        checkedConditions.forEach(cb => params.append('condition', cb.value));
+
+        // Rentang Harga
+        const minPrice = minPriceInput.value.trim();
+        if (minPrice) params.append('min_price', minPrice);
+        const maxPrice = maxPriceInput.value.trim();
+        if (maxPrice) params.append('max_price', maxPrice);
+
+        return params;
+    }
+
+    // Fungsi Utama AJAX Fetch
+    function fetchFilteredItems() {
+        const params = getFilterParams();
+        const apiUrl = `{% url 'search:search_api' %}?${params.toString()}`;
+
+        // Efek visual loading halus
+        gridContainer.classList.add('loading');
+
+        fetch(apiUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            renderItems(data.items, data.count);
+            // Update URL browser secara mulus tanpa refresh halaman
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', newUrl);
+        })
+        .catch(err => {
+            console.error('Error fetching items:', err);
+        })
+        .finally(() => {
+            gridContainer.classList.remove('loading');
+        });
+    }
+
+    // Fungsi Render Hasil JSON ke Kartu HTML
+    function renderItems(items, count) {
+        countBadge.textContent = count;
+
+        if (items.length === 0) {
+            gridContainer.innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">🔍</span>
+                    <h3 class="empty-title">Barang Tidak Ditemukan</h3>
+                    <p class="empty-desc">Tidak ada barang yang cocok dengan pilihan filter kamu. Coba kurangi filter atau cari kata kunci lain.</p>
+                    <button type="button" class="btn-empty-reset" onclick="resetAllFilters()">Reset Filter</button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        items.forEach(item => {
+            const imageMarkup = item.image_url 
+                ? `<img src="${item.image_url}" alt="${escapeHtml(item.name)}" loading="lazy">`
+                : `<span class="item-placeholder-icon">📦</span>`;
+
+            html += `
+                <a href="${item.detail_url}" class="custom-item-card">
+                    <div class="item-card-image-box">
+                        ${imageMarkup}
+                        <span class="item-card-badge">${escapeHtml(item.category_display)}</span>
+                    </div>
+                    <div class="item-card-body">
+                        <h3 class="item-card-title">${escapeHtml(item.name)}</h3>
+                        <p class="item-card-location">
+                            <span>📍</span> ${escapeHtml(item.location)}
+                        </p>
+                        <div class="item-card-bottom">
+                            <div>
+                                <div class="item-card-price-label">Sewa per hari</div>
+                                <div class="item-card-price">
+                                    ${item.formatted_price}<span>/hari</span>
+                                </div>
+                            </div>
+                            <span class="item-status-pill ${item.status}">
+                                ${escapeHtml(item.status_display)}
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            `;
+        });
+
+        gridContainer.innerHTML = html;
+    }
+
+    // Helper mencegah XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // Debounce Helper untuk input ketikan
+    function onSearchInputChanged() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            fetchFilteredItems();
+        }, 300); // Tunggu 300ms setelah user selesai mengetik
+    }
+
+    // Event Listeners Input & Select
+    searchInput.addEventListener('input', onSearchInputChanged);
+    locationTextInput.addEventListener('input', onSearchInputChanged);
+    minPriceInput.addEventListener('input', onSearchInputChanged);
+    maxPriceInput.addEventListener('input', onSearchInputChanged);
+    sortSelect.addEventListener('change', fetchFilteredItems);
+
+    // Event Listener Checkboxes (Kategori, Lokasi, Kondisi)
+    document.querySelectorAll('.filter-checkbox').forEach(cb => {
+        cb.addEventListener('change', fetchFilteredItems);
+    });
+
+    // Reset All Filters
+    window.resetAllFilters = function () {
+        searchInput.value = '';
+        locationTextInput.value = '';
+        minPriceInput.value = '';
+        maxPriceInput.value = '';
+        sortSelect.value = 'latest';
+
+        document.querySelectorAll('.filter-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+
+        fetchFilteredItems();
+    };
+
+    if (btnReset) {
+        btnReset.addEventListener('click', window.resetAllFilters);
+    }
+});
+</script>
+{% endblock content %}
