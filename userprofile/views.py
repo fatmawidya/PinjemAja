@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
@@ -48,3 +48,8 @@ def edit_profile(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'userprofile/edit_profile.html', {'form': form})
+
+@login_required
+def public_profile(request, user_id):
+    profile = get_object_or_404(Profile, user__id=user_id)
+    return render(request, 'userprofile/public_profile.html', {'profile': profile})
