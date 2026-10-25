@@ -11,7 +11,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('userprofile:profil_saya')
+            return redirect('userprofile:my_profile')
     else:
         form = RegisterForm()
     return render(request, 'userprofile/register.html', {'form': form})
