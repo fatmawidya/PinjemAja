@@ -2,6 +2,11 @@
 {% block content %}
 <div class="container" style="max-width: 600px; margin-top: 2rem;">
     <h1>Profil Saya</h1>
+    {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Foto profil" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%;">
+    {% else %}
+        <p><em>Belum ada foto profil.</em></p>
+    {% endif %}
     <p><strong>Username:</strong> {{ request.user.username }}</p>
     <p><strong>Email:</strong> {{ request.user.email }}</p>
     <p><strong>No. HP:</strong> {{ profile.phone_number|default:"-" }}</p>
