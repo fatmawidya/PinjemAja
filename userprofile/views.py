@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from .forms import RegisterForm
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from .forms import RegisterForm
+from .models import Profile
 
 def register_view(request):
     if request.method == 'POST':
@@ -29,3 +31,8 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('landing_page')
+
+@login_required
+def my_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    return render(request, 'userprofile/my_profile.html', {'profile': profile})
