@@ -11,27 +11,30 @@
     <div class="container-xl">
         <section class="transaction-panel p-3 p-md-4 p-lg-5">
             <h1 class="transaction-title text-center mb-4">Permintaan Masuk</h1>
-            <nav class="transaction-filters d-flex flex-wrap justify-content-center gap-2 mb-4">
-                <a href="?status=semua" class="btn filter-btn {% if status_filter == 'semua' %}active{% endif %}">
+            <nav class="transaction-filters d-flex flex-wrap justify-content-center gap-2 mb-4"
+                id="filter-nav">
+                <a href="?status=semua" data-status="semua"
+                class="btn filter-btn {% if status_filter == 'semua' %}active{% endif %}">
                     Semua
                 </a>
 
-                <a href="?status=berlangsung" class="btn filter-btn {% if status_filter == 'berlangsung' %}active{% endif %}">
+                <a href="?status=berlangsung" data-status="berlangsung"
+                    class="btn filter-btn {% if status_filter == 'berlangsung' %}active{% endif %}">
                     Berlangsung
                 </a>
 
-                <a href="?status=selesai"
+                <a href="?status=selesai" data-status="selesai"
                     class="btn filter-btn {% if status_filter == 'selesai' %}active{% endif %}">
                     Selesai
                 </a>
 
-                <a href="?status=dibatalkan"
+                <a href="?status=dibatalkan" data-status="dibatalkan"
                     class="btn filter-btn {% if status_filter == 'dibatalkan' %}active{% endif %}">
                     Dibatalkan
                 </a>
             </nav>
 
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            <!-- <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                 {% for transaksi in transaksi_list %}
                     <div class="col"><article class="transaksi-card h-100">
                         {% if transaksi.barang.cover_image %}
@@ -72,18 +75,21 @@
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="">
                                         > Lihat Detail
                                 </a>
-                                <form method="post">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="batal">
                                     {% csrf_token %}
-                                    <button type="submit"
+                                    <button type="submit" name="aksi" value="batal"
                                             class="btn transaksi-action action-danger">
                                         Tolak
                                     </button>
-                                    <button type="submit"
+                                </form>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="terima">
+                                    {% csrf_token %}
+                                    <button type="submit" name="aksi" value="terima"
                                             class="btn transaksi-action action-primary">
                                         Terima
                                     </button>
                                 </form>
-                            <!-- tambahin css action green tuh -->
+                            tambahin css action green tuh
                             {% elif transaksi.status == "menunggu_konfirmasi" %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-green">
                                     Lihat Bukti
@@ -102,8 +108,17 @@
                         <p>Permintaan pinjam barang kamu akan muncul di sini.</p>
                     </div></div>
                 {% endfor %}
+            </div> -->
+
+            <div id="transaksi-list">
+                {% include 'partials/transaksi_list.html' %}
             </div>
         </section>
     </div>
 </main>
 {% endblock %}
+
+
+{% block extra_js %}
+<script src="{% static 'transaction/js/transaction.js' %}"></script>
+{% endblock extra_js %}
