@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
-from .forms import RegisterForm
+from .forms import RegisterForm, ProfileForm
 from .models import Profile
 
 def register_view(request):
@@ -36,3 +36,15 @@ def logout_view(request):
 def my_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     return render(request, 'userprofile/my_profile.html', {'profile': profile})
+
+@login_required
+def edit_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('userprofile:my_profile')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'userprofile/edit_profile.html', {'form': form})
