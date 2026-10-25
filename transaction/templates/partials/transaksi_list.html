@@ -45,11 +45,7 @@
 
                             {% elif transaksi.status == 'ditolak' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                    <button type="submit" name="aksi" value="kirim_ulang" class="btn action-primary">Kirim Ulang</button>
-                                </form>
+                                <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>
 
                             {% else %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>

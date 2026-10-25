@@ -170,6 +170,30 @@ def edit_transaksi(request, transaksi_id):
         'is_edit': True,
     })
 
+def _is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+def _respon_ok(request, transaksi, pesan, redirect_url):
+    if _is_ajax(request):
+        return JsonResponse({
+            'ok': True,
+            'message': pesan,
+            'status': transaksi.status,
+            'status_display': transaksi.get_status_display(),
+            'redirect_url': redirect_url,
+        })
+    messages.success(request, pesan)
+    return redirect(redirect_url)
+
+def _respon_error(request, pesan, redirect_url, status=400):
+    if _is_ajax(request):
+            return JsonResponse({
+                'ok': False,
+                'message': pesan},
+                status=status)
+    messages.error(request, pesan)
+    return redirect(redirect_url)
+
 @login_required
 @require_POST
 def aksi(request, transaksi_id):
@@ -177,12 +201,11 @@ def aksi(request, transaksi_id):
     action = request.POST.get('aksi')
 
     if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
-        messages.error(request, 'Anda tidak memiliki akses.')
-        return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
+        return _respon_error(request, 'Anda tidak memiliki akses.', redirect_url, status=403)
 
-    if transaksi.peminjam_id:
+    if  transaksi.peminjam_id == request.user.pk:
         redirect_url = reverse('transaction:riwayat_meminjam')
-    elif transaksi.pemilik_id:
+    elif transaksi.pemilik_id == request.user.pk:
         redirect_url = reverse('transaction:permintaan_masuk')
     else:
         redirect_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
@@ -197,16 +220,15 @@ def aksi(request, transaksi_id):
         ('ditolak', 'kirim_ulang', False):          ('menunggu_verifikasi', None),
     }
 
-    result = transitions.get((transaksi.status, action, transaksi.pemilik_id))
+    result = transitions.get((transaksi.status, action,  transaksi.pemilik_id == request.user.pk))
 
     if not result:
-        messages.error(request, 'Aksi tidak tersedia untuk status ini.')
-        return redirect(redirect_url)
+        return _respon_error(request, 'Aksi tidak tersedia untuk status ini.', redirect_url, status=403)
 
     alasan = request.POST.get('alasan', '').strip()
+
     if action == 'tolak' and not alasan:
-        messages.error(request, 'Alasan penolakan wajib diisi.')
-        return redirect(redirect_url)
+        return _respon_error(request, 'Alasan penolakan wajib diisi.', redirect_url)
 
     transaksi.status = result[0]
     if result[1]:
@@ -216,20 +238,25 @@ def aksi(request, transaksi_id):
         transaksi.catatan_penolakan = alasan
     transaksi.save()
 
-    messages.success(request, f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".')
-    return redirect(redirect_url)
+    pesan = f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".'
+    return _respon_ok(request, transaksi, pesan, redirect_url)
 
 def edit_bukti(request, transaksi_id):
     transaksi = get_object_or_404(
             Transaksi,
             pk=transaksi_id,
             peminjam=request.user,
-            status='menunggu_konfirmasi',
+            status=['menunggu_konfirmasi', 'ditolak']
         )
 
     if request.method == 'POST':
         form = FormUploadBukti(request.POST, request.FILES, instance=transaksi)
         if form.is_valid():
+            if transaksi.bukti_pembayaran:
+                transaksi.bukti_pembayaran.delete(save=False)
+                
+            transaksi = form.save(commit=False)
+            transaksi.status = 'menunggu_konfirmasi'
             transaksi= form.save()
             messages.success(request, 'Bukti pembayaran berhasil diperbarui.')
             return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
@@ -246,6 +273,13 @@ def edit_bukti(request, transaksi_id):
         "durasi": durasi,
         'is_edit': True,
     })
-    
+
+def update_transaksi_selesai():
+    sekarang = timezone.localdate()
+
+    Transaksi.objects.filter(
+        status="disetujui",
+        tanggal_selesai__lte=sekarang,
+    ).update(status="selesai")
 
 
