@@ -28,3 +28,6 @@ class FormUploadBukti(forms.ModelForm):
     class Meta:
         model = Transaksi
         fields = ['bukti_pembayaran']
+        widgets = {
+            'bukti_pembayaran': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}) 
+            }
