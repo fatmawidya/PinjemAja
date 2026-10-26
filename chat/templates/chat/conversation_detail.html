@@ -1,0 +1,108 @@
+
+{% extends "base.html" %}
+
+{% block meta %}
+<title>Chat dengan {{ other_participant.username }} - PinjemAja</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Tombol kembali -->
+    <a href="{% url 'chat:inbox' %}"
+       class="text-decoration-none text-success">
+        &larr; Kembali ke Pesan
+    </a>
+
+    <div class="row justify-content-center mt-3">
+        <div class="col-lg-9">
+
+            <div class="card shadow-sm">
+
+                <!-- Header chat -->
+                <div class="card-header bg-white p-3">
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:45px; height:45px; background:#A8BBA3;">
+                            <span class="fw-bold">
+                                {{ other_participant.username|first|upper }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h5 class="mb-0 fw-bold">
+                                {{ other_participant.username }}
+                            </h5>
+
+                            {% if conversation.item %}
+                                <small class="text-muted">
+                                    Barang: {{ conversation.item.name }}
+                                </small>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Area pesan -->
+                <div class="card-body p-4"
+                     style="min-height:400px; background:#FCF9EA;">
+
+                    {% for message in chat_messages %}
+
+                        <div class="d-flex mb-3
+                            {% if message.sender_id == request.user.pk %}
+                                justify-content-end
+                            {% else %}
+                                justify-content-start
+                            {% endif %}">
+      
+                            <div class="rounded-3 p-3 shadow-sm
+                                {% if message.sender_id == request.user.pk %}
+                                    bg-warning
+                                {% else %}
+                                    bg-white
+                                {% endif %}"
+                                style="max-width:75%; overflow-wrap:anywhere;">
+
+                                <div class="fw-bold small mb-1">
+                                    {{ message.sender.username }}
+                                </div>
+
+                                <div style="white-space:pre-wrap;">{{ message.text }}</div>
+
+                                <div class="text-muted small mt-2">
+                                    {{ message.created_at|date:"d M Y H:i" }}
+                                </div>
+
+                            </div>
+                        </div>
+
+                    {% empty %}
+
+                        <div class="text-center text-muted py-5">
+                            <h5>Belum ada pesan</h5>
+                            <p>
+                                Mulai percakapan dengan
+                                {{ other_participant.username }}.
+                            </p>
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+                <!-- Form akan dibuat pada Commit 06 -->
+                <div class="card-footer bg-white p-3">
+                    <p class="text-muted mb-0 text-center small">
+                        Fitur mengirim pesan akan ditambahkan selanjutnya.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

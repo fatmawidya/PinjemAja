@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from item.models import Item
-from .models import Conversation
+from .models import Conversation, Message
 
 
 User = get_user_model()
@@ -43,6 +43,52 @@ class StartConversationTests(TestCase):
             "chat:start_conversation",
             args=[self.item.pk]
         )
+
+        
+    def test_conversation_detail_displays_messages(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        Message.objects.create(
+            conversation=conversation,
+            sender=self.owner,
+            text="Halo Fatma, kameranya masih tersedia.",
+        )
+
+        self.client.force_login(self.borrower)
+
+        response = self.client.get(
+            reverse(
+                "chat:conversation_detail",
+                args=[conversation.pk]
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertTemplateUsed(
+            response,
+            "chat/conversation_detail.html"
+        )
+
+        self.assertContains(
+            response,
+            "Halo Fatma, kameranya masih tersedia."
+        )
+
+        self.assertContains(
+            response,
+            self.owner.username
+        )
+
+        self.assertContains(
+            response,
+            self.item.name
+        )
+
 
     def test_start_conversation_creates_chat(self):
         self.client.force_login(self.borrower)

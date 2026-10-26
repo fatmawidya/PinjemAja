@@ -22,7 +22,8 @@
 
                 <hr>
 
-                {% for conversation in conversations %}
+                <a href="{% url 'chat:conversation_detail' conversation.pk %}"
+                    class="d-block border-bottom py-3 text-decoration-none text-dark">
 
                 <div class="border-bottom py-3">
 

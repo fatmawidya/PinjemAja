@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -99,24 +98,49 @@ def start_conversation(request, item_id):
     )
 
 
+
 @login_required
 def conversation_detail(request, conversation_id):
-    # Ambil percakapan berdasarkan ID
+    # Ambil percakapan beserta informasi pesertanya
     conversation = get_object_or_404(
-        Conversation,
+        Conversation.objects.select_related(
+            "participant_1",
+            "participant_2",
+            "item",
+        ),
         pk=conversation_id
     )
 
-    # Hanya peserta percakapan boleh membuka chat
-    if request.user.pk not in [
+    # Pastikan user merupakan peserta percakapan
+    if request.user.pk not in (
         conversation.participant_1_id,
-        conversation.participant_2_id
-    ]:
+        conversation.participant_2_id,
+    ):
         raise PermissionDenied(
             "Kamu tidak memiliki akses ke percakapan ini."
         )
 
-    # Sementara, sebelum UI detail dibuat di Commit 05
-    return HttpResponse(
-        "Detail percakapan akan dibuat pada Commit 05."
+    # Tentukan siapa lawan chat
+    if conversation.participant_1_id == request.user.pk:
+        other_participant = conversation.participant_2
+    else:
+        other_participant = conversation.participant_1
+
+    # Ambil semua pesan dalam percakapan
+    chat_messages = (
+        conversation.messages
+        .select_related("sender")
+        .order_by("created_at", "pk")
+    )
+
+    context = {
+        "conversation": conversation,
+        "other_participant": other_participant,
+        "chat_messages": chat_messages,
+    }
+
+    return render(
+        request,
+        "chat/conversation_detail.html",
+        context
     )
