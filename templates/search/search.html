@@ -143,6 +143,87 @@
         pointer-events: none;
     }
 
+    /* Riwayat Pencarian (Search History CRUD) */
+    .search-history-box {
+        margin-top: 8px;
+        padding: 8px 10px;
+        background-color: var(--color-brand-cream);
+        border-radius: 8px;
+    }
+
+    .search-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--color-brand-muted);
+        margin-bottom: 6px;
+    }
+
+    .btn-clear-history {
+        background: none;
+        border: none;
+        color: var(--color-brand-danger);
+        font-size: 0.7rem;
+        cursor: pointer;
+        padding: 0;
+        font-weight: 600;
+        font-family: inherit;
+    }
+
+    .btn-clear-history:hover {
+        text-decoration: underline;
+    }
+
+    .search-history-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .history-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--color-brand-white);
+        border: 1px solid var(--color-brand-border);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        color: var(--color-brand-dark);
+        transition: 0.15s;
+    }
+
+    .history-chip:hover {
+        border-color: var(--color-brand-primary);
+    }
+
+    .history-text {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .history-text:hover {
+        color: var(--color-brand-primary);
+    }
+
+    .history-delete {
+        background: none;
+        border: none;
+        color: var(--color-brand-muted);
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0 2px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .history-delete:hover {
+        color: var(--color-brand-danger);
+    }
+
     .filter-options-list {
         max-height: 200px;
         overflow-y: auto;
@@ -675,6 +756,22 @@
                                 autocomplete="off"
                             >
                         </div>
+
+                        <!-- Riwayat Pencarian (Search History CRUD) -->
+                        <div id="search-history-container" class="search-history-box" {% if not search_histories %}style="display: none;"{% endif %}>
+                            <div class="search-history-header">
+                                <span>Pencarian Terakhir:</span>
+                                <button type="button" class="btn-clear-history" onclick="clearAllHistory()">Hapus Semua</button>
+                            </div>
+                            <div id="search-history-chips" class="search-history-chips">
+                                {% for h in search_histories %}
+                                <div class="history-chip" id="history-chip-{{ h.pk }}">
+                                    <span class="history-text" onclick="applyHistoryKeyword('{{ h.keyword|escapejs }}')">⏱️ {{ h.keyword }}</span>
+                                    <button type="button" class="history-delete" onclick="deleteHistoryItem({{ h.pk }})" title="Hapus riwayat">&times;</button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Urutkan Berdasarkan -->
@@ -935,6 +1032,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             renderItems(data.items, data.count);
+            if (data.history) {
+                renderSearchHistory(data.history);
+            }
             // Update URL browser secara mulus tanpa refresh halaman
             const newUrl = `${window.location.pathname}?${params.toString()}`;
             window.history.replaceState({}, '', newUrl);
@@ -1053,6 +1153,74 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         fetchFilteredItems();
+    };
+
+    // Render Riwayat Pencarian secara Dinamis (AJAX)
+    function renderSearchHistory(historyList) {
+        const historyContainer = document.getElementById('search-history-container');
+        const historyChips = document.getElementById('search-history-chips');
+        if (!historyContainer || !historyChips) return;
+
+        if (!historyList || historyList.length === 0) {
+            historyContainer.style.display = 'none';
+            historyChips.innerHTML = '';
+            return;
+        }
+
+        historyContainer.style.display = 'block';
+        let chipsHtml = '';
+        historyList.forEach(h => {
+            chipsHtml += `
+                <div class="history-chip" id="history-chip-${h.id}">
+                    <span class="history-text" onclick="applyHistoryKeyword('${escapeHtml(h.keyword)}')">⏱️ ${escapeHtml(h.keyword)}</span>
+                    <button type="button" class="history-delete" onclick="deleteHistoryItem(${h.id})" title="Hapus riwayat">&times;</button>
+                </div>
+            `;
+        });
+        historyChips.innerHTML = chipsHtml;
+    }
+
+    // Klik Riwayat Pencarian
+    window.applyHistoryKeyword = function (keyword) {
+        searchInput.value = keyword;
+        fetchFilteredItems();
+    };
+
+    // Hapus 1 Item Riwayat (CRUD - Delete)
+    window.deleteHistoryItem = function (id) {
+        fetch(`/search/history/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const chip = document.getElementById(`history-chip-${id}`);
+                if (chip) chip.remove();
+                const remaining = document.querySelectorAll('.history-chip');
+                if (remaining.length === 0) {
+                    const container = document.getElementById('search-history-container');
+                    if (container) container.style.display = 'none';
+                }
+            }
+        });
+    };
+
+    // Bersihkan Semua Riwayat (CRUD - Delete All)
+    window.clearAllHistory = function () {
+        fetch('/search/history/clear/', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const container = document.getElementById('search-history-container');
+                if (container) container.style.display = 'none';
+                const chips = document.getElementById('search-history-chips');
+                if (chips) chips.innerHTML = '';
+            }
+        });
     };
 
     if (btnReset) {
