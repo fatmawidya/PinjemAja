@@ -35,7 +35,7 @@ def logout_view(request):
 @login_required
 def my_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    return render(request, 'userprofile/my_profile.html', {'profile': profile})
+    return render(request, 'userprofile/my_profile.html', {'profile': profile, 'active_menu': 'profil'})
 
 @login_required
 def edit_profile(request):
@@ -47,7 +47,7 @@ def edit_profile(request):
             return redirect('userprofile:my_profile')
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'userprofile/edit_profile.html', {'form': form})
+    return render(request, 'userprofile/edit_profile.html', {'form': form, 'active_menu': 'profil'})
 
 @login_required
 def public_profile(request, user_id):
