@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'item',
     'transaction',
     'search',
-    'profile',
+    'userprofile',
     'chat',
 ]
 
