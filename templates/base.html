@@ -22,6 +22,14 @@
     {% endblock %}
 
 {% include "footer.html" %}
+
+{% include 'transaction/components/toast.html' %}
+
+<script src="{% static 'transaction/js/toast.js' %}"></script>
+
+{% block extra_js %}
+{% endblock extra_js %}
+
 </body>
 
 </html>

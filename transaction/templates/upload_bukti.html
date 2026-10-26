@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+    <title>{% if is_update %}Update{% else %}Upload{% endif %} Bukti Pembayaran - PinjemAja</title>
+    <link rel="stylesheet" href="/static/css/transaction.css">
+{% endblock meta %}
+
+{% block content %}
+<main class="transaksi-page py-5">
+    <div class="container-xl">
+        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+            <h1 class="transaction-title text-center mb-4">Pembayaran Pinjaman</h1>
+            <div class="row g-4">
+                <div class="col-12 col-md-5">
+                    {% if transaksi.barang.cover_image %}
+                        <img src="{{ transaksi.barang.cover_image.image.url }}" alt="{{ transaksi.barang.name }}" class="transaksi-image">
+                    {% else %}
+                        <div class="transaksi-image image-placeholder">Gambar Katalog</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-md-7">
+                    <h2 class="barang-title">{{ transaksi.barang.name }}</h2>
+                    <p class="barang-owner">Pemilik: @{{ transaksi.pemilik.username }}</p>
+                    <p class="tanggal-transaksi">Periode: {{ transaksi.tanggal_mulai|date:'d M Y' }} – {{ transaksi.tanggal_selesai|date:'d M Y' }}</p>
+                    <p class="tanggal-transaksi">Durasi: {{ durasi }} hari</p>
+                    <p class="status-text">Total: Rp{{ transaksi.total_harga}}</p>
+
+                    <section class="bank-detail p-3 mb-4">
+                        <h3 class="barang-title">Rekening pemilik</h3>
+                        {% if info_bank %}
+                            <p class="mb-1">{{ info_bank.nama_bank }}</p>
+                            <p class="mb-1">Nomor rekening: {{ info_bank.nomor_rekening }}</p>
+                            <p class="mb-0">Atas nama: {{ info_bank.nama_pemilik }}</p>
+                        {% else %}
+                            <p class="mb-0">Informasi rekening pemilik belum tersedia.</p>
+                        {% endif %}
+                    </section>
+
+                    {% if is_edit and transaksi.bukti_pembayaran %}
+                        <div class="mb-4">
+                            <p class="mb-2"><strong>Bukti saat ini:</strong></p>
+                            <img src="{{ transaksi.bukti_pembayaran.url }}"
+                                alt="Bukti pembayaran"
+                                class="img-thumbnail"
+                                style="max-width: 250px;">
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <label for="{{ form.bukti_pembayaran.id_for_label }}" class="form-label fw-semibold">
+                            {% if is_update %}
+                                Edit Bukti Pembayaran
+                            {% else %}
+                                Unggah Bukti Pembayaran
+                            {% endif %}
+                        </label>
+                        {{ form.bukti_pembayaran }}
+
+                        {% for error in form.bukti_pembayaran.errors %}
+                            <p class="text-danger small mt-1">{{ error }}</p>
+                        {% endfor %}
+
+                        <p class="form-text">Format gambar (JPG/PNG), maksimal 5MB.</p>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn transaksi-action action-primary">
+                                {% if is_edit %}Update Bukti{% else %}Kirim Bukti{% endif %}
+                            </button>
+                            <a href="{% url 'transaction:detail_transaksi' transaksi.id %}"
+                                class="btn btn-secondary">
+                                Batal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock content %}

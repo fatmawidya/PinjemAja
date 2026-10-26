@@ -98,7 +98,7 @@
 
                         {# ganti href sama URL modul peminjaman #}
 
-                        <a href="#" class="btn-pa-primary">Ajukan Pinjaman</a>
+                        <a href="{% url 'transaction:form_pinjam' item.pk %}" class="btn-pa-primary">Ajukan Pinjaman</a>
                         {% endif %}
 
                         {# ganti href sama URL modul chat #}
