@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width: 600px; margin-top: 2rem;">
+    {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Foto profil" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%;">
+    {% endif %}
+    <h1>{{ profile.user.username }}</h1>
+    <p><strong>Bio:</strong> {{ profile.bio|default:"-" }}</p>
+    <p><strong>Rating:</strong> {{ profile.rating }}</p>
+</div>
+{% endblock %}
