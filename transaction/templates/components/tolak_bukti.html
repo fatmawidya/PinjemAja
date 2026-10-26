@@ -1,0 +1,68 @@
+<div
+    id="modal-tolak-bukti"
+    class="tolak-bukti-modal"
+    popover="auto"
+>
+    <div class="tolak-bukti-modal__content">
+        <button type="button"
+            class="tolak-bukti-modal__close"
+            popovertarget="modal-tolak-bukti"
+            popovertargetaction="hide"
+            aria-label="Tutup form penolakan"
+        > &times; </button>
+
+        <h2 class="tolak-bukti-modal__title">
+            Tolak Bukti Pembayaran
+        </h2>
+        <p>
+            Berikan alasan penolakan agar peminjam tahu
+            apa yang perlu diperbaiki.
+        </p>
+
+        <form
+            method="POST"
+            action="{% url 'transaction:aksi' transaksi.id %}"
+            class="tolak-bukti-form"
+            data-transaksi-id="{{ transaksi.id }}">
+            {% csrf_token %}
+            <input type="hidden" name="aksi" value="tolak">
+
+            <label
+                for="alasan_penolakan_{{ transaksi.id }}"
+                class="tolak-bukti-modal__label"
+            >
+                Alasan penolakan
+            </label>
+
+            <textarea
+                name="alasan"
+                id="alasan_penolakan_{{ transaksi.id }}"
+                class="tolak-bukti-modal__textarea"
+                rows="4"
+                maxlength="2000"
+                placeholder="Contoh: Bukti pembayaran kurang jelas atau tidak sesuai."
+                required
+            ></textarea>
+
+            <div
+                class="tolak-bukti-modal__error"
+                data-error-message
+                role="alert"
+                hidden
+            ></div>
+
+            <div class="tolak-bukti-modal__actions">
+                <button type="button"
+                    class="tolak-bukti-modal__back"
+                    popovertarget="modal-tolak-bukti"
+                    popovertargetaction="hide"
+                    > Batal </button>
+
+                <button
+                    type="submit"
+                    class="tolak-bukti-modal__submit"> Konfirmasi Penolakan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
