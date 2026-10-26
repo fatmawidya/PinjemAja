@@ -71,6 +71,19 @@
                                 </div>
 
                                 <div style="white-space:pre-wrap;">{{ message.text }}</div>
+                                
+                                {% if message.sender_id == request.user.pk %}
+
+                                    <div class="mt-2">
+
+                                        <a href="{% url 'chat:edit_message' message.pk %}"
+                                        class="btn btn-sm btn-outline-dark">
+                                            Edit
+                                        </a>
+
+                                    </div>
+
+                                {% endif %}
 
                                 <div class="text-muted small mt-2">
                                     {{ message.created_at|date:"d M Y H:i" }}

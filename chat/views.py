@@ -1,4 +1,4 @@
-
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -11,7 +11,7 @@ from django.shortcuts import (
 from django.views.decorators.http import require_POST
 
 from item.models import Item
-from .models import Conversation
+from .models import Conversation, Message
 from .forms import MessageForm
 
 @login_required
@@ -162,3 +162,62 @@ def conversation_detail(request, conversation_id):
         "chat/conversation_detail.html",
         context
     )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_message(request, message_id):
+    # Ambil pesan berdasarkan ID
+    message = get_object_or_404(
+        Message.objects.select_related("conversation"),
+        pk=message_id
+    )
+
+    # Hanya pengirim yang boleh mengedit pesannya
+    if message.sender_id != request.user.pk:
+        raise PermissionDenied(
+            "Kamu hanya boleh mengedit pesan sendiri."
+        )
+
+    # Pastikan pengirim adalah peserta percakapan
+    conversation = message.conversation
+
+    if request.user.pk not in (
+        conversation.participant_1_id,
+        conversation.participant_2_id,
+    ):
+        raise PermissionDenied(
+            "Kamu tidak memiliki akses ke percakapan ini."
+        )
+
+    if request.method == "POST":
+        # Isi form dengan data baru
+        form = MessageForm(
+            request.POST,
+            instance=message
+        )
+
+        if form.is_valid():
+            # UPDATE pesan di database
+            form.save()
+
+            return redirect(
+                "chat:conversation_detail",
+                conversation_id=conversation.pk
+            )
+
+    else:
+        # GET: tampilkan form berisi pesan lama
+        form = MessageForm(instance=message)
+
+    context = {
+        "form": form,
+        "message": message,
+    }
+
+    return render(
+        request,
+        "chat/edit_message.html",
+        context
+    )
+
