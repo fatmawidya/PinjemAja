@@ -24,6 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', landing_page, name='landing_page'),
     path('item/', include('item.urls')),
+    path('search/', include('search.urls')),
+    path('profile/', include('userprofile.urls')),
 ]
 
 if settings.DEBUG:
