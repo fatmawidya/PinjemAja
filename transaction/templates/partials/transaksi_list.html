@@ -30,7 +30,7 @@
                             {{ transaksi.get_status_display }}
                         </p>
 
-                        {% if is_peminjam %}
+                        {% if transaksi.peminjam == request.user %}
                             {% if transaksi.status == 'menunggu_verifikasi' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                                 <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi">
@@ -46,12 +46,11 @@
                             {% elif transaksi.status == 'ditolak' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                                 <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>
-
                             {% else %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                             {% endif %}
 
-                        {% else %}
+                        {% elif transaksi.pemilik == request.user%}
 
                             {% if transaksi.status == 'menunggu_verifikasi' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
