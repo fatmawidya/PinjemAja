@@ -416,3 +416,347 @@ class StartConversationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
+class DeleteMessageTests(TestCase):
+
+    def setUp(self):
+        # Buat tiga akun khusus untuk testing
+        self.sender = User.objects.create_user(
+            username="delete_sender_test",
+            password="password123"
+        )
+
+        self.receiver = User.objects.create_user(
+            username="delete_receiver_test",
+            password="password123"
+        )
+
+        self.outsider = User.objects.create_user(
+            username="delete_outsider_test",
+            password="password123"
+        )
+
+        # Percakapan antara sender dan receiver
+        self.conversation = Conversation.objects.create(
+            participant_1=self.sender,
+            participant_2=self.receiver,
+            item=None
+        )
+
+        self.detail_url = reverse(
+            "chat:conversation_detail",
+            args=[self.conversation.pk]
+        )
+
+    def create_message(self):
+        # Membuat pesan baru untuk setiap pengujian
+        return Message.objects.create(
+            conversation=self.conversation,
+            sender=self.sender,
+            text="Pesan rahasia untuk testing delete"
+        )
+
+    def delete_url(self, message):
+        return reverse(
+            "chat:delete_message",
+            args=[message.pk]
+        )
+
+    # --------------------------------------------------------
+    # TEST 1 - Pengirim hapus untuk diri sendiri
+    # --------------------------------------------------------
+
+    def test_delete_for_me_only_hides_from_sender(self):
+        message = self.create_message()
+
+        self.client.force_login(self.sender)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "me"}
+        )
+
+        self.assertRedirects(response, self.detail_url)
+
+        # Pesan tetap ada di database
+        self.assertTrue(
+            Message.objects.filter(pk=message.pk).exists()
+        )
+
+        # Pesan disembunyikan hanya untuk pengirim
+        self.assertTrue(
+            message.hidden_for.filter(pk=self.sender.pk).exists()
+        )
+
+        self.assertFalse(
+            message.hidden_for.filter(pk=self.receiver.pk).exists()
+        )
+
+        # Pengirim tidak melihat pesan lagi
+        sender_response = self.client.get(self.detail_url)
+
+        self.assertNotContains(
+            sender_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        # Penerima masih melihat pesan
+        self.client.force_login(self.receiver)
+
+        receiver_response = self.client.get(self.detail_url)
+
+        self.assertContains(
+            receiver_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+    # --------------------------------------------------------
+    # TEST 2 - Penerima hapus pesan untuk diri sendiri
+    # --------------------------------------------------------
+
+    def test_receiver_can_delete_for_me(self):
+        message = self.create_message()
+
+        self.client.force_login(self.receiver)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "me"}
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        # Pesan hanya disembunyikan dari penerima
+        self.assertTrue(
+            message.hidden_for.filter(pk=self.receiver.pk).exists()
+        )
+
+        self.assertFalse(
+            message.hidden_for.filter(pk=self.sender.pk).exists()
+        )
+
+        # Penerima tidak melihat pesan
+        receiver_response = self.client.get(self.detail_url)
+
+        self.assertNotContains(
+            receiver_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        # Pengirim masih melihat pesan
+        self.client.force_login(self.sender)
+
+        sender_response = self.client.get(self.detail_url)
+
+        self.assertContains(
+            sender_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+    # --------------------------------------------------------
+    # TEST 3 - Hapus untuk semua orang seperti WhatsApp
+    # --------------------------------------------------------
+
+    def test_delete_for_everyone_keeps_placeholder(self):
+        message = self.create_message()
+
+        self.client.force_login(self.sender)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "everyone"}
+        )
+
+        self.assertRedirects(response, self.detail_url)
+
+        # Pesan tidak dihapus dari database
+        self.assertTrue(
+            Message.objects.filter(pk=message.pk).exists()
+        )
+
+        message.refresh_from_db()
+
+        # Teks asli dihapus dan pesan diberi tanda deleted
+        self.assertTrue(message.deleted_for_everyone)
+        self.assertEqual(message.text, "")
+
+        # Pengirim melihat pemberitahuan
+        sender_response = self.client.get(self.detail_url)
+
+        self.assertContains(
+            sender_response,
+            "Kamu menghapus pesan ini"
+        )
+
+        self.assertNotContains(
+            sender_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        # Penerima juga melihat pemberitahuan
+        self.client.force_login(self.receiver)
+
+        receiver_response = self.client.get(self.detail_url)
+
+        self.assertContains(
+            receiver_response,
+            "Pesan ini telah dihapus"
+        )
+
+        self.assertNotContains(
+            receiver_response,
+            "Pesan rahasia untuk testing delete"
+        )
+
+    # --------------------------------------------------------
+    # TEST 4 - Penerima tidak boleh hapus untuk semua orang
+    # --------------------------------------------------------
+
+    def test_receiver_cannot_delete_for_everyone(self):
+        message = self.create_message()
+
+        self.client.force_login(self.receiver)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "everyone"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        message.refresh_from_db()
+
+        # Pesan asli tetap aman
+        self.assertEqual(
+            message.text,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        self.assertFalse(message.deleted_for_everyone)
+
+    # --------------------------------------------------------
+    # TEST 5 - Orang di luar percakapan tidak boleh hapus
+    # --------------------------------------------------------
+
+    def test_outsider_cannot_delete_message(self):
+        message = self.create_message()
+
+        self.client.force_login(self.outsider)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "me"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        # Pesan tidak berubah
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        self.assertFalse(
+            message.hidden_for.filter(pk=self.outsider.pk).exists()
+        )
+
+    # --------------------------------------------------------
+    # TEST 6 - Delete harus menggunakan POST
+    # --------------------------------------------------------
+
+    def test_delete_requires_post(self):
+        message = self.create_message()
+
+        self.client.force_login(self.sender)
+
+        response = self.client.get(
+            self.delete_url(message)
+        )
+
+        self.assertEqual(response.status_code, 405)
+
+        # GET tidak boleh menghapus pesan
+        self.assertTrue(
+            Message.objects.filter(pk=message.pk).exists()
+        )
+
+    # --------------------------------------------------------
+    # TEST 7 - Scope hapus tidak valid
+    # --------------------------------------------------------
+
+    def test_invalid_delete_scope_rejected(self):
+        message = self.create_message()
+
+        self.client.force_login(self.sender)
+
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "invalid"}
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        self.assertFalse(message.deleted_for_everyone)
+
+    # --------------------------------------------------------
+    # TEST 8 - Pesan yang sudah dihapus tidak boleh diedit
+    # --------------------------------------------------------
+
+    def test_deleted_message_cannot_be_edited(self):
+        message = self.create_message()
+
+        self.client.force_login(self.sender)
+
+        # Hapus dulu untuk semua orang
+        self.client.post(
+            self.delete_url(message),
+            {"scope": "everyone"}
+        )
+
+        # Coba edit pesan yang sudah dihapus
+        response = self.client.post(
+            reverse("chat:edit_message", args=[message.pk]),
+            {"text": "Mencoba mengembalikan pesan"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        message.refresh_from_db()
+
+        self.assertTrue(message.deleted_for_everyone)
+        self.assertEqual(message.text, "")
+
+    # --------------------------------------------------------
+    # TEST 9 - Pengguna belum login tidak boleh menghapus
+    # --------------------------------------------------------
+
+    def test_delete_requires_login(self):
+        message = self.create_message()
+
+        # Tidak login
+        response = self.client.post(
+            self.delete_url(message),
+            {"scope": "everyone"}
+        )
+
+        # Harus dialihkan ke halaman login
+        self.assertEqual(response.status_code, 302)
+
+        # Pesan tidak berubah
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan rahasia untuk testing delete"
+        )
+
+        self.assertFalse(message.deleted_for_everyone)
+
