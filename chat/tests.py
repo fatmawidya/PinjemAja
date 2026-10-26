@@ -45,6 +45,48 @@ class StartConversationTests(TestCase):
         )
 
         
+    def test_inbox_renders_when_empty(self):
+        self.client.force_login(self.borrower)
+
+        response = self.client.get(
+            reverse("chat:inbox")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "chat/inbox.html"
+        )
+        self.assertContains(
+            response,
+            "Belum ada percakapan."
+        )
+
+    def test_inbox_displays_conversation(self):
+        Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        self.client.force_login(self.borrower)
+
+        response = self.client.get(
+            reverse("chat:inbox")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            self.owner.username
+        )
+        self.assertContains(
+            response,
+            self.item.name
+        )
+
+
+        
     def test_conversation_detail_displays_messages(self):
         conversation = Conversation.objects.create(
             item=self.item,
