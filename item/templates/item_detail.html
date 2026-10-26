@@ -94,21 +94,30 @@
                         <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-primary">Edit Barang</a>
                         <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger">Hapus Barang</a>
                     {% elif user.is_authenticated %}
-                        {% if item.is_available %}
-
-                        {# TODO: ganti href dengan URL modul peminjaman #}
-
-                        <a href="{% url 'transaction:form_pinjam' item.pk %}" class="btn-pa-primary">Ajukan Pinjaman</a>
+                        {% if active_transaksi %}
+                            {% if active_transaksi.status == 'menunggu_verifikasi' %}
+                                <a href="{% url 'transaction:detail_transaksi' active_transaksi.pk %}" class="btn-pa-outline">
+                                    Menunggu Verifikasi Pemilik
+                                </a>
+                            {% elif active_transaksi.status == 'menunggu_pembayaran' %}
+                                <a href="{% url 'transaction:upload_bukti' active_transaksi.pk %}" class="btn-pa-primary">
+                                    Menunggu Pembayaran
+                                </a>
+                            {% elif active_transaksi.status == 'menunggu_konfirmasi' %}
+                                <a href="{% url 'transaction:detail_transaksi' active_transaksi.pk %}" class="btn-pa-outline">
+                                    Menunggu Konfirmasi
+                                </a>
+                            {% endif %}
+                        {% elif item.is_available %}
+                            <a href="{% url 'transaction:form_pinjam' item.pk %}" class="btn-pa-primary">Ajukan Pinjaman</a>
                         {% endif %}
 
-                        {# TODO: ganti href dengan URL modul chat #}
+
 
                         <a href="#" class="btn-pa-outline">💬 Chat Pemilik</a>
                     {% else %}
 
-                        {# TODO: ganti href dengan URL login dari modul akun #}
-
-                        <a href="#" class="btn-pa-primary">Masuk untuk meminjam</a>
+                        <a href="{% url 'userprofile:login' %}" class="btn-pa-primary">Masuk untuk meminjam</a>
                     {% endif %}
                 </div>
             </aside>
