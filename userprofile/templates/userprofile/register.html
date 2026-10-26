@@ -1,12 +1,10 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container" style="max-width: 480px; margin-top: 2rem;">
-    <h1>Daftar Akun</h1>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Daftar</button>
-    </form>
-    <p class="mt-3">Sudah punya akun? <a href="{% url 'userprofile:login' %}">Login di sini</a></p>
-</div>
+{% extends 'userprofile/auth.html' %}
+{% block auth_content %}
+<h2 class="mb-4 text-center">Daftar Akun</h2>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-pinjemaja-primary w-100">Daftar</button>
+</form>
+<p class="mt-3 text-center">Sudah punya akun? <a href="{% url 'userprofile:login' %}"><strong>Login di sini</strong></a></p>
 {% endblock %}

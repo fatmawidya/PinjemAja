@@ -1,0 +1,90 @@
+:root {
+    --pinjemaja-green: #184136;
+    --pinjemaja-cream: #FFFFFF;
+    --pinjemaja-yellow: #F3B216;
+    --pinjemaja-black: #000000;
+    --pinjemaja-red: #C81010;
+}
+
+/* ===== Auth pages (login/register) ===== */
+.auth-page {
+    background: var(--pinjemaja-green);
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    background: var(--pinjemaja-cream);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+}
+
+/* ===== Profile pages (sidebar layout) ===== */
+.profile-page {
+    background: var(--pinjemaja-green);
+    min-height: 80vh;
+    padding: 2rem 0;
+}
+
+.profile-sidebar {
+    background: var(--pinjemaja-cream);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.profile-sidebar .nav-link {
+    color: var(--pinjemaja-black);
+    padding: 0.6rem 1rem;
+}
+
+.profile-sidebar .nav-link.active {
+    background: var(--pinjemaja-yellow);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.profile-card {
+    background: var(--pinjemaja-cream);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--pinjemaja-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* ===== Buttons ===== */
+.btn-pinjemaja-primary {
+    background: var(--pinjemaja-yellow);
+    color: var(--pinjemaja-black);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-pinjemaja-primary:hover {
+    background: #d99e0f;
+    color: var(--pinjemaja-black);
+}
+
+.btn-pinjemaja-danger {
+    background: var(--pinjemaja-red);
+    color: #fff;
+    border: none;
+}
+
+.btn-pinjemaja-danger:hover {
+    background: #a30d0d;
+    color: #fff;
+}

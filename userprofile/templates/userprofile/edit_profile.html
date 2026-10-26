@@ -1,11 +1,10 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="container" style="max-width: 480px; margin-top: 2rem;">
-    <h1>Edit Profil</h1>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Simpan</button>
-    </form>
-</div>
+{% extends 'userprofile/profile_base.html' %}
+{% block profile_content %}
+<h4 class="mb-4">Edit Profil</h4>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-pinjemaja-primary">Simpan Profil</button>
+    <a href="{% url 'userprofile:my_profile' %}" class="btn btn-link">Kembali</a>
+</form>
 {% endblock %}
