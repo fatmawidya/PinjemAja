@@ -1,0 +1,74 @@
+
+{% extends "base.html" %}
+
+{% block meta %}
+<title>Pesan - PinjemAja</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h2 class="fw-bold mb-4">Pesan</h2>
+
+    <div class="row g-4">
+
+        <!-- Sidebar daftar percakapan -->
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+
+                <h5 class="fw-bold">
+                    Daftar Percakapan
+                </h5>
+
+                <hr>
+
+                {% for conversation in conversations %}
+
+                <div class="border-bottom py-3">
+
+                    <h6 class="fw-bold mb-1">
+                        {{ conversation.other_participant.username }}
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Barang:
+                        {% if conversation.item %}
+                            {{ conversation.item.name }}
+                        {% else %}
+                            Tidak ada barang terkait
+                        {% endif %}
+                    </p>
+
+                </div>
+
+                {% empty %}
+
+                <p class="text-muted text-center py-3">
+                    Belum ada percakapan.
+                </p>
+
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <!-- Bagian isi chat -->
+        <div class="col-md-8">
+            <div class="card shadow-sm p-5 text-center">
+
+                <h4 class="fw-bold">
+                    Selamat Datang di Chat!
+                </h4>
+
+                <p class="text-muted">
+                    Pilih percakapan untuk mulai
+                    mengirim pesan.
+                </p>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock content %}
