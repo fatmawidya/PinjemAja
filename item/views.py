@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from transaction.models import Transaksi
 
 from .forms import ItemForm
 from .models import Item, ItemImage
@@ -32,14 +33,33 @@ def item_list(request):
     })
 
 
-# Detail satu barang. Info kontak pemilik disembunyikan di template kalau belum login
+# Detail satu barang
 def item_detail(request, pk):
     item = get_object_or_404(
         Item.objects.prefetch_related('images'), pk=pk
     )
+    is_owner = request.user == item.owner
+    active_transaksi = None
+    if request.user.is_authenticated and not is_owner:
+        active_transaksi = (
+            Transaksi.objects
+            .filter(
+                barang=item,
+                peminjam=request.user,
+                status__in=[
+                    'menunggu_verifikasi',
+                    'menunggu_pembayaran',
+                    'menunggu_konfirmasi',
+                ],
+            )
+            .order_by('-created_at')
+            .first()
+        )
+
     return render(request, 'item_detail.html', {
         'item': item,
-        'is_owner': request.user == item.owner,
+        'is_owner': is_owner,
+        'active_transaksi': active_transaksi,
     })
 
 
