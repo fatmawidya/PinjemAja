@@ -1,0 +1,22 @@
+<aside class="pjchat-sidebar" aria-label="Daftar percakapan">
+  <div class="pjchat-sidebar-header">
+    <h2>Pesan</h2>
+    <span class="pjchat-sidebar-count">{{ conversations|length }}</span>
+  </div>
+  <div class="pjchat-sidebar-list">
+    {% for conv in conversations %}
+      <a href="{% url 'chat:conversation_detail' conv.pk %}"
+         class="pjchat-thread {% if conversation and conv.pk == conversation.pk %}pjchat-thread--active{% endif %}">
+        <span class="pjchat-avatar">{{ conv.other_participant.username|first|upper }}</span>
+        <span class="pjchat-thread-info">
+          <strong>{{ conv.other_participant.username }}</strong>
+          <small>
+            {% if conv.item %}{{ conv.item.name }}{% else %}Tidak ada barang terkait{% endif %}
+          </small>
+        </span>
+      </a>
+    {% empty %}
+      <p class="pjchat-empty-sidebar">Belum ada percakapan.</p>
+    {% endfor %}
+  </div>
+</aside>

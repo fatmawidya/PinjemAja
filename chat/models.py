@@ -74,3 +74,13 @@ class Message(models.Model):
     def __str__(self):
         return f"Pesan dari {self.sender}"
 
+    
+    hidden_for = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="hidden_chat_messages"
+    )
+
+    deleted_for_everyone = models.BooleanField(default=False)
+
+

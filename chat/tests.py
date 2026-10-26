@@ -305,3 +305,114 @@ class StartConversationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    
+    def make_test_message(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        return Message.objects.create(
+            conversation=conversation,
+            sender=self.borrower,
+            text="Pesan sebelum diedit",
+        )
+
+    def test_edit_message_page(self):
+        message = self.make_test_message()
+        self.client.force_login(self.borrower)
+
+        response = self.client.get(
+            reverse("chat:edit_message", args=[message.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Pesan sebelum diedit"
+        )
+
+    def test_edit_message_success(self):
+        message = self.make_test_message()
+        self.client.force_login(self.borrower)
+
+        response = self.client.post(
+            reverse("chat:edit_message", args=[message.pk]),
+            {"text": "Pesan setelah diedit"}
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan setelah diedit"
+        )
+
+        self.assertEqual(
+            message.sender,
+            self.borrower
+        )
+
+    def test_edit_message_empty_rejected(self):
+        message = self.make_test_message()
+        self.client.force_login(self.borrower)
+
+        response = self.client.post(
+            reverse("chat:edit_message", args=[message.pk]),
+            {"text": "   "}
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan sebelum diedit"
+        )
+
+        self.assertContains(
+            response,
+            "Pesan tidak boleh kosong."
+        )
+
+    def test_other_participant_cannot_edit(self):
+        message = self.make_test_message()
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse("chat:edit_message", args=[message.pk]),
+            {"text": "Diubah Budi"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        message.refresh_from_db()
+
+        self.assertEqual(
+            message.text,
+            "Pesan sebelum diedit"
+        )
+
+    def test_outsider_cannot_edit_message(self):
+        message = self.make_test_message()
+        self.client.force_login(self.other_user)
+
+        response = self.client.get(
+            reverse("chat:edit_message", args=[message.pk])
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_edit_message_login_required(self):
+        message = self.make_test_message()
+
+        response = self.client.get(
+            reverse("chat:edit_message", args=[message.pk])
+        )
+
+        self.assertEqual(response.status_code, 302)
+

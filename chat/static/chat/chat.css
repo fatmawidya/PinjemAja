@@ -1,0 +1,737 @@
+
+/* =========================================
+   PINJEMAJA CHAT
+   Desktop + Mobile
+   ========================================= */
+
+/* HALAMAN UTAMA */
+
+.pjchat-page {
+    width: min(1400px, 96%);
+    margin: 24px auto 36px;
+}
+
+.pjchat-shell {
+    display: grid;
+    grid-template-columns: minmax(245px, 32%) minmax(0, 1fr);
+    height: min(78vh, 760px);
+    min-height: 480px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dce2dd;
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(12, 59, 46, .08);
+}
+
+
+/* SIDEBAR — DAFTAR PERCAKAPAN */
+
+.pjchat-sidebar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: #fff;
+    border-right: 1px solid #e0e6e1;
+}
+
+.pjchat-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    min-height: 79px;
+    padding: 18px 20px;
+    background: #f6faf6;
+    border-bottom: 1px solid #e0e6e1;
+}
+
+.pjchat-sidebar-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.pjchat-sidebar-count {
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: .8rem;
+    color: #467652;
+    background: #e1eee2;
+}
+
+/* Daftar chat scroll sendiri */
+.pjchat-sidebar-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+}
+
+.pjchat-thread {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eef0ec;
+    color: #213029;
+    text-decoration: none;
+}
+
+.pjchat-thread:hover,
+.pjchat-thread--active {
+    background: #e9f3e7;
+    color: #153b2b;
+}
+
+.pjchat-thread-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pjchat-thread-info strong,
+.pjchat-thread-info small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pjchat-thread-info strong {
+    font-size: .95rem;
+}
+
+.pjchat-thread-info small {
+    color: #6e7971;
+}
+
+.pjchat-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #a8bba3;
+    color: #0c3b2e;
+    font-weight: 700;
+}
+
+.pjchat-empty-sidebar {
+    padding: 20px;
+    text-align: center;
+    color: #758277;
+}
+
+.pjchat-empty-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background: #f9f9f2;
+    text-align: center;
+}
+
+.pjchat-empty-illustration {
+    margin-bottom: 15px;
+    font-size: 3rem;
+}
+
+.pjchat-empty-pane h2 {
+    font-size: 1.35rem;
+}
+
+.pjchat-empty-pane p {
+    color: #647469;
+}
+
+
+/* PANEL CHAT KANAN */
+
+.pjchat-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.pjchat-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 12px;
+    min-height: 79px;
+    padding: 14px 22px;
+    background: #f6faf6;
+    border-bottom: 1px solid #e0e6e1;
+}
+
+.pjchat-contact {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pjchat-contact strong {
+    font-size: 1.05rem;
+    color: #183828;
+}
+
+.pjchat-contact small {
+    font-size: .8rem;
+    color: #748078;
+}
+
+/* Hanya riwayat pesan yang scroll */
+.pjchat-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px 24px;
+    background: #f5f1e8;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #a7bba7 transparent;
+}
+
+
+/* BUBBLE PESAN */
+
+.pjchat-message {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 14px;
+}
+
+.pjchat-message--mine {
+    justify-content: flex-end;
+}
+
+/* Bubble mengikuti isi teks */
+.pjchat-bubble {
+    position: relative;
+    flex: 0 1 auto;
+    box-sizing: border-box;
+    width: fit-content;
+    min-width: 0;
+    max-width: min(78%, 560px);
+    padding: 9px 13px 7px 38px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .09);
+    overflow-wrap: anywhere;
+}
+
+/* Pesan sendiri di kanan */
+.pjchat-message--mine .pjchat-bubble {
+    padding: 9px 38px 7px 13px;
+    background: #d8efc9;
+}
+
+.pjchat-message-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: .94rem;
+    line-height: 1.5;
+    color: #213029;
+}
+
+.pjchat-message-meta {
+    margin-top: 4px;
+    text-align: right;
+    color: #627169;
+    font-size: .69rem;
+    line-height: 1.3;
+}
+
+.pjchat-no-messages {
+    width: fit-content;
+    margin: 35px auto;
+    padding: 12px 16px;
+    border-radius: 18px;
+    background: #fff7da;
+    color: #5b6255;
+    text-align: center;
+}
+
+
+/* PESAN TERHAPUS UNTUK SEMUA */
+
+/* Tetap kecil, mengikuti tulisan */
+.pjchat-bubble--deleted {
+    width: fit-content;
+    max-width: min(85%, 360px);
+}
+
+.pjchat-deleted-text {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: normal;
+    font-size: .86rem;
+    line-height: 1.35;
+    font-style: italic;
+    color: #647567;
+}
+
+.pjchat-deleted-text span:first-child {
+    flex-shrink: 0;
+    font-size: 1rem;
+    font-style: normal;
+}
+
+
+/* MENU PANAH PESAN */
+
+/* Pesan lawan: panah di kiri */
+.pjchat-actions {
+    position: absolute;
+    top: 5px;
+    left: 7px;
+    right: auto;
+    z-index: 10;
+}
+
+/* Pesan sendiri: panah di kanan */
+.pjchat-message--mine .pjchat-actions {
+    left: auto;
+    right: 7px;
+}
+
+.pjchat-actions > summary {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    list-style: none;
+    color: #31513b;
+    background: #e8f1e6;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+
+.pjchat-message--mine .pjchat-actions > summary {
+    background: #d0e8c4;
+}
+
+.pjchat-actions > summary::-webkit-details-marker {
+    display: none;
+}
+
+.pjchat-actions > summary span {
+    font-size: 1.45rem;
+    line-height: 1;
+    transform: translateY(-5px);
+}
+
+/* Panah muncul ketika hover atau diklik */
+.pjchat-bubble:hover .pjchat-actions > summary,
+.pjchat-actions:focus-within > summary,
+.pjchat-actions[open] > summary {
+    opacity: 1;
+}
+
+.pjchat-actions > summary:hover {
+    background: #b9dcae;
+}
+
+/* Dropdown aktif tampil di depan bubble lain */
+.pjchat-message:has(.pjchat-actions[open]) {
+    z-index: 30;
+}
+
+/* Menu pesan lawan membuka ke kanan */
+.pjchat-actions-menu {
+    position: absolute;
+    top: 29px;
+    left: 0;
+    right: auto;
+    z-index: 20;
+    box-sizing: border-box;
+    min-width: 165px;
+    padding: 5px;
+    border: 1px solid #e3e7e2;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .17);
+}
+
+/* Menu pesan sendiri membuka ke kiri */
+.pjchat-message--mine .pjchat-actions-menu {
+    left: auto;
+    right: 0;
+}
+
+/* Menu dekat bawah membuka ke atas */
+.pjchat-actions.pjchat-menu-up .pjchat-actions-menu {
+    top: auto;
+    bottom: 29px;
+}
+
+.pjchat-menu-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: #fff;
+    text-align: left;
+    white-space: nowrap;
+    font: inherit;
+    font-size: .88rem;
+    color: #1f3227;
+    cursor: pointer;
+}
+
+.pjchat-menu-item:hover {
+    background: #edf5ed;
+}
+
+.pjchat-menu-item--danger {
+    color: #ac3434;
+}
+
+.pjchat-menu-item--danger:hover {
+    background: #fff0f0;
+}
+
+
+/* KOLOM KIRIM PESAN */
+
+.pjchat-composer {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: #f6faf6;
+    border-top: 1px solid #dfe5df;
+}
+
+.pjchat-compose-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.pjchat-compose-form textarea {
+    flex: 1;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-height: 120px;
+    padding: 11px 16px;
+    resize: vertical;
+    border: 1px solid #cbd8cb;
+    border-radius: 22px;
+    background: #fff;
+    font: inherit;
+    font-size: .94rem;
+}
+
+.pjchat-compose-form textarea:focus {
+    outline: 2px solid #9cbd9c;
+    border-color: #6d9773;
+}
+
+.pjchat-send {
+    flex: 0 0 auto;
+    padding: 11px 17px;
+    border: 0;
+    border-radius: 22px;
+    background: #ffba00;
+    color: #0c3b2e;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pjchat-send:hover {
+    background: #e5aa00;
+}
+
+.pjchat-form-error {
+    margin: 5px 0;
+    color: #b52222;
+    font-size: .8rem;
+}
+
+/* Label tetap tersedia untuk screen reader */
+.pjchat-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+
+/* POPUP EDIT DAN HAPUS */
+
+.pjchat-dialog {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    width: min(480px, calc(100% - 28px));
+    max-height: calc(100vh - 36px);
+    margin: auto;
+    overflow-y: auto;
+    padding: 22px;
+    border: 1px solid #dae3da;
+    border-radius: 14px;
+    background: #fff;
+    color: #1f2a24;
+    box-shadow: 0 12px 50px rgba(0, 0, 0, .22);
+}
+
+.pjchat-dialog::backdrop {
+    background: rgba(10, 25, 15, .48);
+}
+
+.pjchat-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.pjchat-dialog-head h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.pjchat-dialog-close {
+    border: 0;
+    background: transparent;
+    color: #3c4b3f;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.pjchat-dialog-caption {
+    display: block;
+    margin: 10px 0 8px;
+    font-size: .87rem;
+    font-weight: 600;
+    color: #4b6551;
+}
+
+.pjchat-edit-preview {
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    padding: 13px;
+    border-radius: 8px;
+    background: #e7f4dc;
+}
+
+.pjchat-dialog textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #b9cab9;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.pjchat-dialog textarea:focus {
+    outline: 2px solid #8cb38b;
+}
+
+.pjchat-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 16px;
+}
+
+.pjchat-button-secondary,
+.pjchat-button-primary {
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 9px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pjchat-button-secondary {
+    background: #e7eee7;
+    color: #1a3721;
+}
+
+.pjchat-button-secondary:hover {
+    background: #dce8dc;
+}
+
+.pjchat-button-primary {
+    background: #ffba00;
+    color: #0c3b2e;
+}
+
+.pjchat-button-primary:hover {
+    background: #e5aa00;
+}
+
+
+/* PILIHAN HAPUS */
+
+.pjchat-delete-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.pjchat-delete-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 15px 18px;
+    border: 1px solid #d2dfcf;
+    border-radius: 12px;
+    background: #f2f8ed;
+    color: #183828;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pjchat-delete-choice:hover {
+    background: #e0efd9;
+}
+
+.pjchat-delete-choice strong {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.pjchat-delete-choice small {
+    font-size: 12px;
+    color: #617264;
+}
+
+.pjchat-delete-choice--danger {
+    background: #fff3f3;
+    color: #a52b2b;
+    border-color: #f1caca;
+}
+
+.pjchat-delete-choice--danger:hover {
+    background: #ffe6e6;
+}
+
+.pjchat-delete-choice--danger strong {
+    color: #a52b2b;
+}
+
+/* Sembunyikan opsi untuk semua orang jika bukan pengirim */
+.pjchat-delete-choice[hidden] {
+    display: none !important;
+}
+
+
+/* AKSESIBILITAS */
+
+.pjchat-actions > summary:focus-visible,
+.pjchat-menu-item:focus-visible,
+.pjchat-delete-choice:focus-visible,
+.pjchat-send:focus-visible {
+    outline: 2px solid #377d48;
+    outline-offset: 2px;
+}
+
+@media (hover: none) {
+    .pjchat-actions > summary {
+        opacity: 1;
+    }
+}
+
+
+/* TAMPILAN HP */
+
+@media (max-width: 700px) {
+    .pjchat-page {
+        width: 98%;
+        margin: 10px auto 20px;
+    }
+
+    .pjchat-shell {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 145px minmax(0, 1fr);
+        height: min(85vh, 790px);
+        min-height: 540px;
+    }
+
+    .pjchat-sidebar {
+        border-right: 0;
+        border-bottom: 1px solid #dfe5df;
+    }
+
+    .pjchat-sidebar-header {
+        min-height: 44px;
+        padding: 7px 14px;
+    }
+
+    .pjchat-sidebar-header h2 {
+        font-size: 1rem;
+    }
+
+    /* Daftar chat di HP digeser horizontal */
+    .pjchat-sidebar-list {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .pjchat-thread {
+        flex: 0 0 auto;
+        min-width: 190px;
+        max-width: 220px;
+        border-right: 1px solid #eef0ec;
+        border-bottom: 0;
+    }
+
+    .pjchat-header {
+        min-height: 63px;
+        padding: 9px 12px;
+    }
+
+    .pjchat-messages {
+        padding: 13px 11px;
+    }
+
+    .pjchat-bubble {
+        max-width: 90%;
+    }
+
+    .pjchat-composer {
+        padding: 9px;
+    }
+
+    .pjchat-send {
+        padding: 11px 12px;
+    }
+
+    .pjchat-dialog {
+        padding: 18px;
+    }
+}

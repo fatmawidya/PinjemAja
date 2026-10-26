@@ -22,4 +22,17 @@ urlpatterns = [
         views.conversation_detail,
         name="conversation_detail"
     ),
+
+    path(
+        "pesan/<int:message_id>/edit/",
+        views.edit_message,
+        name="edit_message"
+    ),
+
+    
+    path(
+        "pesan/<int:message_id>/hapus/",
+        views.delete_message,
+        name="delete_message"
+    ),
 ]
