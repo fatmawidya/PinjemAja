@@ -265,6 +265,27 @@
         font-size: 0.85rem;
     }
 
+    .btn-apply-filter {
+        width: 100%;
+        margin-top: 20px;
+        background-color: var(--color-brand-yellow);
+        color: var(--color-brand-primary);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.92rem;
+        font-weight: 700;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s ease;
+        box-shadow: 0 2px 8px rgba(243, 178, 22, 0.25);
+    }
+
+    .btn-apply-filter:hover {
+        background-color: #E5A800;
+        transform: translateY(-1px);
+    }
+
     .custom-select {
         width: 100%;
         padding: 10px 12px;
@@ -691,6 +712,11 @@
                         </div>
                     </div>
 
+                    <!-- Tombol Terapkan (Sesuai Wireframe Figma Celine) -->
+                    <button type="button" id="btn-apply-filters" class="btn-apply-filter">
+                        Terapkan
+                    </button>
+
                 </form>
             </aside>
 
@@ -772,6 +798,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const minPriceInput = document.getElementById('min-price-input');
     const maxPriceInput = document.getElementById('max-price-input');
     const btnReset = document.getElementById('btn-reset-filters');
+    const btnApply = document.getElementById('btn-apply-filters');
     const gridContainer = document.getElementById('items-grid-container');
     const countBadge = document.getElementById('items-count-badge');
     const activeTagsContainer = document.getElementById('active-tags-container');
@@ -943,6 +970,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnReset) {
         btnReset.addEventListener('click', window.resetAllFilters);
+    }
+    if (btnApply) {
+        btnApply.addEventListener('click', fetchFilteredItems);
     }
 });
 </script>

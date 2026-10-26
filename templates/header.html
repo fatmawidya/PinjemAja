@@ -16,6 +16,7 @@
 
         <nav class="header-nav">
             <a href="{% url 'landing_page' %}" class="nav-pill">Beranda</a>
+            <a href="{% url 'search:search_page' %}" class="nav-pill">Cari Barang</a>
 
             {% if user.is_authenticated %}
                 {# TODO: ganti href dengan URL modul chat dan modul profil #}
