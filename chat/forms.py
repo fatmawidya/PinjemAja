@@ -17,6 +17,12 @@ class MessageForm(forms.ModelForm):
             }),
         }
 
+        error_messages = {
+            "text": {
+                "required": "Pesan tidak boleh kosong.",
+            }
+        }
+
     def clean_text(self):
         text = self.cleaned_data["text"].strip()
 

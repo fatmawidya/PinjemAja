@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from item.models import Item
 from .models import Conversation
-
+from .forms import MessageForm
 
 @login_required
 def inbox(request):
@@ -99,9 +99,9 @@ def start_conversation(request, item_id):
 
 
 
+
 @login_required
 def conversation_detail(request, conversation_id):
-    # Ambil percakapan beserta informasi pesertanya
     conversation = get_object_or_404(
         Conversation.objects.select_related(
             "participant_1",
@@ -111,7 +111,7 @@ def conversation_detail(request, conversation_id):
         pk=conversation_id
     )
 
-    # Pastikan user merupakan peserta percakapan
+    # Hanya peserta chat yang boleh mengakses
     if request.user.pk not in (
         conversation.participant_1_id,
         conversation.participant_2_id,
@@ -120,13 +120,30 @@ def conversation_detail(request, conversation_id):
             "Kamu tidak memiliki akses ke percakapan ini."
         )
 
-    # Tentukan siapa lawan chat
+    # Tentukan lawan chat
     if conversation.participant_1_id == request.user.pk:
         other_participant = conversation.participant_2
     else:
         other_participant = conversation.participant_1
 
-    # Ambil semua pesan dalam percakapan
+    # CREATE: kirim pesan baru
+    if request.method == "POST":
+        form = MessageForm(request.POST)
+
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.conversation = conversation
+            message.sender = request.user
+            message.save()
+
+            return redirect(
+                "chat:conversation_detail",
+                conversation_id=conversation.pk
+            )
+    else:
+        form = MessageForm()
+
+    # READ: ambil riwayat pesan
     chat_messages = (
         conversation.messages
         .select_related("sender")
@@ -137,6 +154,7 @@ def conversation_detail(request, conversation_id):
         "conversation": conversation,
         "other_participant": other_participant,
         "chat_messages": chat_messages,
+        "form": form,
     }
 
     return render(

@@ -85,6 +85,86 @@ class StartConversationTests(TestCase):
             self.item.name
         )
 
+        
+    def test_send_message_success(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        self.client.force_login(self.borrower)
+
+        url = reverse(
+            "chat:conversation_detail",
+            args=[conversation.pk]
+        )
+
+        response = self.client.post(
+            url,
+            {"text": "Halo Budi, boleh pinjam kamera?"}
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Message.objects.count(), 1)
+
+        message = Message.objects.first()
+
+        self.assertEqual(
+            message.sender,
+            self.borrower
+        )
+        self.assertEqual(
+            message.conversation,
+            conversation
+        )
+
+        self.assertRedirects(response, url)
+
+    def test_send_empty_message_rejected(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        self.client.force_login(self.borrower)
+
+        response = self.client.post(
+            reverse(
+                "chat:conversation_detail",
+                args=[conversation.pk]
+            ),
+            {"text": "   "}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Message.objects.count(), 0)
+        self.assertContains(
+            response,
+            "Pesan tidak boleh kosong."
+        )
+
+    def test_other_user_cannot_send_message(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(
+            reverse(
+                "chat:conversation_detail",
+                args=[conversation.pk]
+            ),
+            {"text": "Pesan tidak diizinkan"}
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Message.objects.count(), 0)
+
 
         
     def test_conversation_detail_displays_messages(self):
