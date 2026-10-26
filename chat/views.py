@@ -2,7 +2,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -15,35 +15,74 @@ from .models import Conversation, Message
 from .forms import MessageForm
 from django.http import HttpResponseBadRequest
 
-@login_required
-def inbox(request):
-    # Ambil percakapan milik user yang sedang login
+def build_chat_sidebar_context(request, active_conversation_id=None):
+    search_query = request.GET.get("q", "").strip()
+    current_filter = request.GET.get("filter", "all").strip().lower()
+
+    if current_filter not in ["all", "unread"]:
+        current_filter = "all"
+
     conversations = (
         Conversation.objects.filter(
-            Q(participant_1=request.user)
-            | Q(participant_2=request.user)
+            Q(participant_1=request.user) | Q(participant_2=request.user)
         )
-        .select_related(
-            "participant_1",
-            "participant_2",
-            "item",
-        )
+        .select_related("participant_1", "participant_2", "item")
         .order_by("-created_at")
     )
 
-    # Tentukan lawan chat
-    for conversation in conversations:
-        if conversation.participant_1_id == request.user.pk:
-            conversation.other_participant = (
-                conversation.participant_2
-            )
+    processed_conversations = []
+
+    for conv in conversations:
+        if conv.participant_1_id == request.user.pk:
+            other_participant = conv.participant_2
         else:
-            conversation.other_participant = (
-                conversation.participant_1
+            other_participant = conv.participant_1
+
+        unread_messages_count = (
+            Message.objects.filter(
+                conversation=conv,
+                is_read=False,
             )
+            .exclude(sender=request.user)
+            .exclude(hidden_for=request.user)
+            .count()
+        )
+
+        conv.other_participant = other_participant
+        conv.unread_count = unread_messages_count
+        conv.has_unread = unread_messages_count > 0
+        conv.is_active = conv.pk == active_conversation_id
+
+        processed_conversations.append(conv)
+
+    all_count = len(processed_conversations)
+    unread_count = sum(1 for conv in processed_conversations if conv.has_unread)
+
+    if search_query:
+        processed_conversations = [
+            conv for conv in processed_conversations
+            if search_query.lower() in conv.other_participant.username.lower()
+        ]
+
+    if current_filter == "unread":
+        processed_conversations = [
+            conv for conv in processed_conversations if conv.has_unread
+        ]
+
+    return {
+        "conversations": processed_conversations,
+        "chat_search_query": search_query,
+        "chat_filter": current_filter,
+        "chat_all_count": all_count,
+        "chat_unread_count": unread_count,
+    }
+
+@login_required
+def inbox(request):
+    sidebar_context = build_chat_sidebar_context(request)
 
     context = {
-        "conversations": conversations,
+        **sidebar_context,
     }
 
     return render(request, "chat/inbox.html", context)
@@ -99,10 +138,9 @@ def start_conversation(request, item_id):
     )
 
 
-
-
 @login_required
 def conversation_detail(request, conversation_id):
+    # Ambil percakapan yang sedang dibuka
     conversation = get_object_or_404(
         Conversation.objects.select_related(
             "participant_1",
@@ -112,7 +150,7 @@ def conversation_detail(request, conversation_id):
         pk=conversation_id
     )
 
-    # Hanya peserta chat yang boleh mengakses
+    # Pastikan user merupakan peserta percakapan
     if request.user.pk not in (
         conversation.participant_1_id,
         conversation.participant_2_id,
@@ -121,35 +159,13 @@ def conversation_detail(request, conversation_id):
             "Kamu tidak memiliki akses ke percakapan ini."
         )
 
-    
-    # Ambil semua percakapan milik user untuk sidebar kiri
-    sidebar_conversations = list(
-        Conversation.objects.filter(
-            Q(participant_1=request.user) |
-            Q(participant_2=request.user)
-        )
-        .select_related(
-            "participant_1",
-            "participant_2",
-            "item"
-        )
-        .order_by("-created_at")
-    )
-
-    # Tentukan nama lawan chat pada setiap percakapan
-    for conv in sidebar_conversations:
-        if conv.participant_1_id == request.user.pk:
-            conv.other_participant = conv.participant_2
-        else:
-            conv.other_participant = conv.participant_1
-
     # Tentukan lawan chat
     if conversation.participant_1_id == request.user.pk:
         other_participant = conversation.participant_2
     else:
         other_participant = conversation.participant_1
 
-    # CREATE: kirim pesan baru
+    # KIRIM PESAN
     if request.method == "POST":
         form = MessageForm(request.POST)
 
@@ -166,6 +182,17 @@ def conversation_detail(request, conversation_id):
     else:
         form = MessageForm()
 
+    # MARK AS READ
+    # Saat penerima membuka chat, pesan masuk ditandai terbaca.
+    if request.method == "GET":
+        Message.objects.filter(
+            conversation=conversation,
+            is_read=False,
+        ).exclude(
+            sender=request.user
+        ).update(is_read=True)
+
+    # Ambil riwayat pesan yang tidak disembunyikan
     chat_messages = (
         conversation.messages
         .exclude(hidden_for=request.user)
@@ -173,12 +200,19 @@ def conversation_detail(request, conversation_id):
         .order_by("created_at", "pk")
     )
 
+    # Ambil sidebar beserta Search, All, dan Unread
+    sidebar_context = build_chat_sidebar_context(
+        request,
+        active_conversation_id=conversation.pk
+    )
+
+    # Data untuk HTML
     context = {
         "conversation": conversation,
         "other_participant": other_participant,
         "chat_messages": chat_messages,
         "form": form,
-        "conversations": sidebar_conversations,
+        **sidebar_context,
     }
 
     return render(
