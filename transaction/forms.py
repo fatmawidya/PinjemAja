@@ -29,5 +29,5 @@ class FormUploadBukti(forms.ModelForm):
         model = Transaksi
         fields = ['bukti_pembayaran']
         widgets = {
-            'bukti_pembayaran': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}) 
+            'bukti_pembayaran': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
             }
