@@ -13,7 +13,7 @@
                     <div class="transaksi-body">
                         <h2 class="barang-title">{{ transaksi.barang.name }}</h2>
 
-                        {% if is_peminjam %}
+                        {% if transaksi.peminjam == request.user %}
                             <p class="barang-owner">{{ transaksi.pemilik }}</p>
                         {% else %}
                             <p class="barang-peminjam">{{ transaksi.peminjam }}</p>
@@ -62,7 +62,7 @@
                                         Tolak
                                     </button>
                                 </form>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="terima">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
                                     {% csrf_token %}
                                     <input type="hidden" name="status_filter" value="{{ status_filter }}">
                                     <button type="submit" name="aksi" value="terima"

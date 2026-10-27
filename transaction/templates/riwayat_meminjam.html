@@ -123,7 +123,7 @@
         {% endif %} -->
 
             <div id="transaksi-list">
-                {% include 'partials/transaksi_list.html' with transaksi=transaksi  %}
+                {% include 'partials/transaksi_list.html' with transaksi_list=transaksi_list is_peminjam=True status_filter=status_filter %}
             </div>
         </section>
     </div>
@@ -132,5 +132,5 @@
 
 
 {% block extra_js %}
-<script src="{% static 'transaction/js/transaction.js' %}"></script>
+<script src="/static/js/transaction.js"></script>
 {% endblock extra_js %}
