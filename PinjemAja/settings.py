@@ -144,7 +144,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 LOGIN_URL = 'userprofile:login'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'userprofile' / 'templates',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 WHITENOISE_USE_FINDERS = True
 
