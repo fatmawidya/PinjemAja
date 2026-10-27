@@ -3,11 +3,21 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import NoReverseMatch, reverse
 from django.views.decorators.http import require_POST
 from transaction.models import Transaksi
 
 from .forms import ItemForm
 from .models import Item, ItemImage
+
+# URL chat ke pemilik barang
+def _chat_url(item):
+    if not 'chat:start_conversation':
+        return None
+    try:
+        return reverse('chat:start_conversation', args=[item.pk])
+    except NoReverseMatch:
+        return None
 
 
 # Menyimpan tiap file upload jadi satu ItemImage
@@ -60,6 +70,7 @@ def item_detail(request, pk):
         'item': item,
         'is_owner': is_owner,
         'active_transaksi': active_transaksi,
+        'chat_url': _chat_url(item),
     })
 
 
