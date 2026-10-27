@@ -1,10 +1,84 @@
 {% extends 'userprofile/profile_base.html' %}
 {% block profile_content %}
 <h4 class="mb-4">Edit Profil</h4>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-pinjemaja-primary">Simpan Profil</button>
-    <a href="{% url 'userprofile:my_profile' %}" class="btn btn-link">Kembali</a>
-</form>
+
+{% include 'userprofile/partials/edit_profile_form.html' %}
+
+<script>
+const WILAYAH_BASE = 'https://emsifa.github.io/api-wilayah-indonesia/api';
+const provinceSelect = document.getElementById('province-select');
+const citySelect = document.getElementById('city-select');
+const districtSelect = document.getElementById('district-select');
+const subdistrictSelect = document.getElementById('subdistrict-select');
+const provinceHidden = document.getElementById('province-hidden');
+
+async function loadProvinces() {
+    const res = await fetch(`${WILAYAH_BASE}/provinces.json`);
+    const data = await res.json();
+    data.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        provinceSelect.appendChild(opt);
+    });
+}
+
+provinceSelect.addEventListener('change', async function () {
+    citySelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
+    districtSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+    subdistrictSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+    citySelect.disabled = true;
+    districtSelect.disabled = true;
+    subdistrictSelect.disabled = true;
+
+    if (!this.value) return;
+    provinceHidden.value = this.options[this.selectedIndex].textContent;
+
+    const res = await fetch(`${WILAYAH_BASE}/regencies/${this.value}.json`);
+    const data = await res.json();
+    data.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        citySelect.appendChild(opt);
+    });
+    citySelect.disabled = false;
+});
+
+citySelect.addEventListener('change', async function () {
+    districtSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+    subdistrictSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+    districtSelect.disabled = true;
+    subdistrictSelect.disabled = true;
+
+    if (!this.value) return;
+    const res = await fetch(`${WILAYAH_BASE}/districts/${this.value}.json`);
+    const data = await res.json();
+    data.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.name;
+        districtSelect.appendChild(opt);
+    });
+    districtSelect.disabled = false;
+});
+
+districtSelect.addEventListener('change', async function () {
+    subdistrictSelect.innerHTML = '<option value="">Pilih Kelurahan</option>';
+    subdistrictSelect.disabled = true;
+
+    if (!this.value) return;
+    const res = await fetch(`${WILAYAH_BASE}/villages/${this.value}.json`);
+    const data = await res.json();
+    data.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = v.name;
+        subdistrictSelect.appendChild(opt);
+    });
+    subdistrictSelect.disabled = false;
+});
+
+loadProvinces();
+</script>
 {% endblock %}
