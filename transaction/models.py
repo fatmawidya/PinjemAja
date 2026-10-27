@@ -14,6 +14,13 @@ class Transaksi(models.Model):
         ('dibatalkan', 'Dibatalkan'),
         ]
 
+    STATUS_HARGA_TERKUNCI = [
+    'menunggu_konfirmasi',
+    'ditolak',
+    'disetujui',
+    'selesai',
+    ]
+
     METODE = [
     ('ambil_sendiri', 'Ambil Sendiri'),
     ('dikirim', 'Dikirim'),
@@ -30,6 +37,7 @@ class Transaksi(models.Model):
     status = models.CharField(max_length=30, choices=STATUS, default='menunggu_verifikasi')
     total_harga = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 #     form
+    harga_terkunci = models.BooleanField(default=False)
     bukti_pembayaran = models.ImageField(upload_to='bukti/', null=True, blank=True)
     metode_pengambilan = models.CharField( max_length=20, choices=METODE, default='ambil_sendiri')
     pesan_peminjam = models.TextField (blank=True, help_text="Pesan opsional buat pemilik")
@@ -38,14 +46,25 @@ class Transaksi(models.Model):
     dibatalkan_pada = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-def hitung_total(self):
-    durasi = (self.tanggal_selesai - self.tanggal_mulai).days + 1
-    if durasi <= 0:
-        return 0
-    return self.barang.price * durasi
+    def hitung_total(self):
+        if not (self.barang_id and self.tanggal_mulai and self.tanggal_selesai):
+            return 0
+        durasi = (self.tanggal_selesai - self.tanggal_mulai).days + 1
+        if durasi <= 0:
+            return 0
+        return self.barang.price * durasi
 
-def save(self, *args, **kwargs):
-    if self.barang_id and self.tanggal_mulai and self.tanggal_selesai:
-        self.total_harga = self.hitung_total()
-    super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if self.harga_terkunci:
+            pass
+        elif self.status in self.STATUS_HARGA_TERKUNCI:
+            self.harga_terkunci = True
+        else:
+            if self.barang_id and self.tanggal_mulai and self.tanggal_selesai:
+                self.total_harga = self.hitung_total()
+
+        if 'update_fields' in kwargs and kwargs['update_fields']:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'total_harga', 'harga_terkunci'}
+
+        super().save(*args, **kwargs)
 
