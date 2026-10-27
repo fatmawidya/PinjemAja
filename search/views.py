@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from item.models import Item
 from .models import SearchHistory
+from .forms import SearchForm
 
 
 def save_search_history(request, query):
@@ -125,9 +126,11 @@ def search_page(request):
     # Ambil 5 riwayat pencarian terakhir
     user = request.user if request.user.is_authenticated else None
     search_histories = SearchHistory.objects.filter(user=user)[:5]
+    form = SearchForm(request.GET)
 
     context = {
         'items': items,
+        'form': form,
         'categories': Item.CATEGORY_CHOICES,
         'conditions': Item.CONDITION_CHOICES,
         'locations': all_locations,
