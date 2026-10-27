@@ -10,7 +10,7 @@ from transaction.models import Transaksi
 from .forms import ItemForm
 from .models import Item, ItemImage
 
-# URL chat ke pemilik barang
+
 def _chat_url(item):
     if not 'chat:start_conversation':
         return None
@@ -20,13 +20,13 @@ def _chat_url(item):
         return None
 
 
-# Menyimpan tiap file upload jadi satu ItemImage
+
 def _save_images(item, files, start_order=0):
     for offset, f in enumerate(files):
         ItemImage.objects.create(item=item, image=f, order=start_order + offset)
 
 
-# Semua barang berstatus tersedia. Public (tidak wajib login)
+
 def item_list(request):
     items = Item.objects.filter(status='tersedia').prefetch_related('images')
 
@@ -43,13 +43,14 @@ def item_list(request):
     })
 
 
-# Detail satu barang
+
 def item_detail(request, pk):
     item = get_object_or_404(
         Item.objects.prefetch_related('images'), pk=pk
     )
     is_owner = request.user == item.owner
     active_transaksi = None
+    
     if request.user.is_authenticated and not is_owner:
         active_transaksi = (
             Transaksi.objects
@@ -60,6 +61,8 @@ def item_detail(request, pk):
                     'menunggu_verifikasi',
                     'menunggu_pembayaran',
                     'menunggu_konfirmasi',
+                    'disetujui', 
+                    'ditolak',    
                 ],
             )
             .order_by('-created_at')
@@ -74,7 +77,7 @@ def item_detail(request, pk):
     })
 
 
-# owner di-set otomatis
+
 @login_required
 def item_create(request):
     if request.method == 'POST':
@@ -91,7 +94,7 @@ def item_create(request):
     return render(request, 'item_form.html', {'form': form, 'mode': 'create'})
 
 
-# hanya owner yang boleh edit
+
 @login_required
 def item_update(request, pk):
     item = get_object_or_404(Item, pk=pk)
@@ -102,7 +105,7 @@ def item_update(request, pk):
         form = ItemForm(request.POST, request.FILES, instance=item)
         if form.is_valid():
             form.save()
-            # foto baru ditambahkan setelah foto yang sudah ada
+            
             last = item.images.aggregate(Max('order'))['order__max']
             _save_images(item, form.cleaned_data['images'],
                          start_order=0 if last is None else last + 1)
@@ -115,7 +118,7 @@ def item_update(request, pk):
     })
 
 
-# hapus foto barang (hanya owner)
+
 @login_required
 @require_POST
 def item_image_delete(request, pk, image_pk):
@@ -130,7 +133,7 @@ def item_image_delete(request, pk, image_pk):
     return redirect('item:item_update', pk=item.pk)
 
 
-# hanya owner yang boleh hapus
+
 @login_required
 def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
@@ -144,7 +147,7 @@ def item_delete(request, pk):
     return render(request, 'item_delete.html', {'item': item})
 
 
-# Barang milik user yang sedang login
+
 @login_required
 def my_items(request):
     items = Item.objects.filter(owner=request.user).prefetch_related('images')
