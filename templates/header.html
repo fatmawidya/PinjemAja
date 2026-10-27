@@ -20,7 +20,7 @@
 
             {% if user.is_authenticated %}
                 {# TODO: ganti href dengan URL modul chat dan modul profil #}
-                <a href="#" class="nav-icon-link">
+                <a href="{% url 'chat:inbox' %}" class="nav-icon-link">
                     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4z"/></svg>
                     <span>Chat</span>
                 </a>
