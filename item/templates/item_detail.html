@@ -59,7 +59,7 @@
             <!-- TENGAH: info barang -->
             <div class="detail-info">
                 <h1 class="detail-name">{{ item.name }}</h1>
-                <p class="detail-price">Rp{{ item.price|floatformat:"0g" }}/Hari</p>
+
                 <hr class="detail-divider">
 
                 <h2 class="detail-section-title">Detail Produk</h2>
@@ -83,8 +83,9 @@
 
             <!-- KANAN: kartu status + aksi -->
             <aside class="status-card">
-                <div class="status-card-header{% if item.status != 'tersedia' %} is-off{% endif %}">
-                    {% if item.status == 'tersedia' %}Tersedia
+                <div class="status-card-header{% if active_transaksi %} is-pending{% elif item.status != 'tersedia' %} is-off{% endif %}">
+                    {% if active_transaksi %}{{ active_transaksi.get_status_display }}
+                    {% elif item.status == 'tersedia' %}Tersedia
                     {% elif item.status == 'dipinjam' %}Terpinjam
                     {% else %}Tidak Tersedia{% endif %}
                 </div>
@@ -96,25 +97,31 @@
                     {% elif user.is_authenticated %}
                         {% if active_transaksi %}
                             {% if active_transaksi.status == 'menunggu_verifikasi' %}
-                                <a href="{% url 'transaction:detail_transaksi' active_transaksi.pk %}" class="btn-pa-outline">
-                                    Menunggu Verifikasi Pemilik
-                                </a>
+                                <span class="btn-pa-waiting is-disabled">Menunggu Verifikasi Pemilik</span>
                             {% elif active_transaksi.status == 'menunggu_pembayaran' %}
                                 <a href="{% url 'transaction:upload_bukti' active_transaksi.pk %}" class="btn-pa-primary">
-                                    Menunggu Pembayaran
+                                    Unggah Bukti Pembayaran
                                 </a>
                             {% elif active_transaksi.status == 'menunggu_konfirmasi' %}
-                                <a href="{% url 'transaction:detail_transaksi' active_transaksi.pk %}" class="btn-pa-outline">
-                                    Menunggu Konfirmasi
-                                </a>
+                                <span class="btn-pa-waiting is-disabled">Menunggu Konfirmasi Pemilik</span>
                             {% endif %}
+                            <a href="{% url 'transaction:detail_transaksi' active_transaksi.pk %}" class="pa-link text-center">
+                                Lihat detail transaksi
+                            </a>
                         {% elif item.is_available %}
                             <a href="{% url 'transaction:form_pinjam' item.pk %}" class="btn-pa-primary">Ajukan Pinjaman</a>
+                        {% else %}
+                            <span class="btn-pa-waiting is-disabled">Sedang tidak tersedia</span>
                         {% endif %}
 
-
-
-                        <a href="{% url 'chat:_sidebar' %}" class="btn-pa-outline">💬 Chat Pemilik</a>
+                        {% if chat_url %}
+                            <form method="post" action="{{ chat_url }}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-pa-outline">💬 Chat Pemilik</button>
+                            </form>
+                        {% else %}
+                            <span class="btn-pa-outline is-disabled" title="Fitur chat belum tersedia">💬 Chat Pemilik</span>
+                        {% endif %}
                     {% else %}
 
                         <a href="{% url 'userprofile:login' %}" class="btn-pa-primary">Masuk untuk meminjam</a>
