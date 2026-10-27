@@ -1141,3 +1141,267 @@ class ChatSidebarAjaxTests(TestCase):
             after.json()["unread_count"],
             0,
         )
+
+
+# ============================================
+# TEST AJAX JSON: EDIT DAN HAPUS PESAN
+# ============================================
+
+class ChatEditDeleteJsonTests(TestCase):
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            username="json_edit_sender",
+            password="password123",
+        )
+
+        self.receiver = User.objects.create_user(
+            username="json_edit_receiver",
+            password="password123",
+        )
+
+        self.outsider = User.objects.create_user(
+            username="json_edit_outsider",
+            password="password123",
+        )
+
+        self.conversation = Conversation.objects.create(
+            participant_1=self.sender,
+            participant_2=self.receiver,
+            item=None,
+        )
+
+        self.message = Message.objects.create(
+            conversation=self.conversation,
+            sender=self.sender,
+            text="Pesan sebelum diedit",
+        )
+
+        self.edit_url = reverse(
+            "chat:edit_message",
+            args=[self.message.pk],
+        )
+
+        self.delete_url = reverse(
+            "chat:delete_message",
+            args=[self.message.pk],
+        )
+
+    def ajax_post(self, url, data):
+        return self.client.post(
+            url,
+            data,
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_ACCEPT="application/json",
+        )
+
+    # TEST 1: Pengirim berhasil edit lewat AJAX
+    def test_ajax_edit_success(self):
+        self.client.force_login(self.sender)
+
+        response = self.ajax_post(
+            self.edit_url,
+            {"text": "Pesan setelah diedit"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(
+            data["message"]["text"],
+            "Pesan setelah diedit",
+        )
+
+        self.message.refresh_from_db()
+        self.assertEqual(
+            self.message.text,
+            "Pesan setelah diedit",
+        )
+
+    # TEST 2: AJAX menolak edit pesan kosong
+    def test_ajax_edit_empty_message(self):
+        self.client.force_login(self.sender)
+
+        response = self.ajax_post(
+            self.edit_url,
+            {"text": "   "},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("errors", response.json())
+
+        self.message.refresh_from_db()
+        self.assertEqual(
+            self.message.text,
+            "Pesan sebelum diedit",
+        )
+
+    # TEST 3: Penerima tidak boleh mengedit
+    # pesan milik pengirim
+    def test_ajax_edit_other_users_message(self):
+        self.client.force_login(self.receiver)
+
+        response = self.ajax_post(
+            self.edit_url,
+            {"text": "Edit tanpa izin"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.message.refresh_from_db()
+        self.assertEqual(
+            self.message.text,
+            "Pesan sebelum diedit",
+        )
+
+    # TEST 4: Pesan yang dihapus untuk semua
+    # tidak boleh diedit
+    def test_ajax_edit_deleted_message(self):
+        self.message.text = ""
+        self.message.deleted_for_everyone = True
+        self.message.save()
+
+        self.client.force_login(self.sender)
+
+        response = self.ajax_post(
+            self.edit_url,
+            {"text": "Menghidupkan pesan lagi"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.message.refresh_from_db()
+        self.assertTrue(
+            self.message.deleted_for_everyone
+        )
+        self.assertEqual(self.message.text, "")
+
+    # TEST 5: AJAX hapus untuk saya
+    # tidak menghapus pesan dari database
+    def test_ajax_delete_for_me(self):
+        self.client.force_login(self.receiver)
+
+        response = self.ajax_post(
+            self.delete_url,
+            {"scope": "me"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["scope"], "me")
+        self.assertTrue(data["hidden_for_me"])
+
+        self.assertTrue(
+            self.message.hidden_for.filter(
+                pk=self.receiver.pk
+            ).exists()
+        )
+
+        self.assertFalse(
+            self.message.hidden_for.filter(
+                pk=self.sender.pk
+            ).exists()
+        )
+
+        self.assertTrue(
+            Message.objects.filter(
+                pk=self.message.pk
+            ).exists()
+        )
+
+    # TEST 6: Pengirim berhasil menghapus
+    # pesan untuk semua orang melalui AJAX
+    def test_ajax_delete_for_everyone(self):
+        self.client.force_login(self.sender)
+
+        response = self.ajax_post(
+            self.delete_url,
+            {"scope": "everyone"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["scope"], "everyone")
+        self.assertTrue(data["deleted_for_everyone"])
+
+        self.message.refresh_from_db()
+
+        self.assertEqual(self.message.text, "")
+        self.assertTrue(
+            self.message.deleted_for_everyone
+        )
+
+        # Objek pesan tetap ada (soft delete)
+        self.assertTrue(
+            Message.objects.filter(
+                pk=self.message.pk
+            ).exists()
+        )
+
+    # TEST 7: Penerima tidak boleh
+    # menghapus pesan pengirim untuk semua orang
+    def test_ajax_receiver_cannot_delete_everyone(self):
+        self.client.force_login(self.receiver)
+
+        response = self.ajax_post(
+            self.delete_url,
+            {"scope": "everyone"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.message.refresh_from_db()
+
+        self.assertFalse(
+            self.message.deleted_for_everyone
+        )
+
+        self.assertEqual(
+            self.message.text,
+            "Pesan sebelum diedit",
+        )
+
+    # TEST 8: AJAX menolak pilihan hapus
+    # yang tidak valid
+    def test_ajax_delete_invalid_scope(self):
+        self.client.force_login(self.sender)
+
+        response = self.ajax_post(
+            self.delete_url,
+            {"scope": "invalid"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        data = response.json()
+        self.assertFalse(data["success"])
+        self.assertIn("error", data)
+
+        self.message.refresh_from_db()
+        self.assertFalse(
+            self.message.deleted_for_everyone
+        )
+
+    # TEST 9: Orang di luar percakapan
+    # tidak boleh menghapus pesan
+    def test_ajax_outsider_cannot_delete(self):
+        self.client.force_login(self.outsider)
+
+        response = self.ajax_post(
+            self.delete_url,
+            {"scope": "me"},
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.assertFalse(
+            self.message.hidden_for.filter(
+                pk=self.outsider.pk
+            ).exists()
+        )

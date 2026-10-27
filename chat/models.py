@@ -48,12 +48,6 @@ class Conversation(models.Model):
             )
         )
 
-    def other_user(self, user):
-        if self.participant_1_id == user.pk:
-            return self.participant_2
-        return self.participant_1
-
-
 class Message(models.Model):
     conversation = models.ForeignKey(
         Conversation,
