@@ -18,8 +18,25 @@ class RegisterForm(UserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['phone_number', 'bio', 'avatar']  
+        fields = ['phone_number', 'bio', 'avatar']
+        labels = {
+            'phone_number': 'Nomor Telepon',
+            'bio': 'Tentang Saya',
+            'avatar': 'Foto Profil',
+        }
         widgets = {
-            'phone_number': forms.TextInput(attrs={'placeholder': '081234567890'}),
-            'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Ceritakan sedikit tentang dirimu...'}),
+            'phone_number': forms.TextInput(attrs={
+                'placeholder': '081234567890',
+                'class': 'form-control',
+            }),
+            'bio': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Ceritakan sedikit tentang dirimu...',
+                'class': 'form-control',
+            }),
+            # FileInput biasa tidak menampilkan checkbox Clear/Change.
+            'avatar': forms.FileInput(attrs={
+                'accept': 'image/*',
+                'class': 'd-none',
+            }),
         }
