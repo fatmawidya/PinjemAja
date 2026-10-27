@@ -4,9 +4,11 @@
     --pinjemaja-yellow: #F3B216;
     --pinjemaja-black: #000000;
     --pinjemaja-red: #C81010;
+    --pinjemaja-muted: #6c757d;
+    --pinjemaja-border: #ced4da;
 }
 
-/* ===== Auth pages (login/register) ===== */
+/* ===== Auth pages: Login and Register ===== */
 .auth-page {
     background: var(--pinjemaja-green);
     min-height: 80vh;
@@ -20,11 +22,50 @@
     background: var(--pinjemaja-cream);
     border-radius: 12px;
     padding: 2rem;
-    max-width: 420px;
+    max-width: 480px;
     width: 100%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.auth-card h1,
+.auth-card h2,
+.auth-card h3,
+.auth-card h4,
+.auth-card h5 {
+    color: var(--pinjemaja-green);
+    font-weight: 700;
 }
 
-/* ===== Profile pages (sidebar layout) ===== */
+/* Form inputs in auth pages */
+.auth-card form p {
+    margin-bottom: 1rem;
+}
+
+.auth-card form p label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.auth-card form input:not([type="checkbox"]):not([type="radio"]),
+.auth-card form select,
+.auth-card form textarea {
+    display: block;
+    width: 100%;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--pinjemaja-border);
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.auth-card form input:focus,
+.auth-card form select:focus,
+.auth-card form textarea:focus {
+    border-color: var(--pinjemaja-green);
+    outline: 2px solid rgba(24, 65, 54, 0.15);
+}
+
+/* ===== Profile pages ===== */
 .profile-page {
     background: var(--pinjemaja-green);
     min-height: 80vh;
@@ -40,6 +81,12 @@
 .profile-sidebar .nav-link {
     color: var(--pinjemaja-black);
     padding: 0.6rem 1rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.profile-sidebar .nav-link:hover {
+    background: #f2f2f2;
 }
 
 .profile-sidebar .nav-link.active {
@@ -52,6 +99,7 @@
     background: var(--pinjemaja-cream);
     border-radius: 12px;
     padding: 2rem;
+    min-width: 0;
 }
 
 .profile-avatar {
@@ -65,7 +113,63 @@
     overflow: hidden;
 }
 
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ===== Profile forms ===== */
+
+.profile-card form p {
+    margin-bottom: 1.2rem;
+}
+
+.profile-card form p label,
+.profile-card form > label,
+.profile-card form .form-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.profile-card form input:not([type="checkbox"]):not([type="radio"]),
+.profile-card form select,
+.profile-card form textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.profile-card form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.profile-card form select,
+.profile-card form textarea {
+    width: 100%;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--pinjemaja-border);
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.profile-card form input[type="file"] {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.profile-card form input:focus,
+.profile-card form select:focus,
+.profile-card form textarea:focus {
+    border-color: var(--pinjemaja-green);
+    outline: 2px solid rgba(24, 65, 54, 0.15);
+}
+
+.profile-card form textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
 /* ===== Buttons ===== */
+
 .btn-pinjemaja-primary {
     background: var(--pinjemaja-yellow);
     color: var(--pinjemaja-black);
@@ -82,9 +186,32 @@
     background: var(--pinjemaja-red);
     color: #fff;
     border: none;
+    font-weight: 600;
 }
 
 .btn-pinjemaja-danger:hover {
     background: #a30d0d;
     color: #fff;
+}
+
+.profile-card .btn,
+.auth-card .btn {
+    border-radius: 8px;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 576px) {
+    .auth-card,
+    .profile-card {
+        padding: 1.25rem;
+    }
+
+    .profile-page {
+        padding: 1rem 0;
+    }
+
+    .profile-sidebar {
+        padding: 1rem;
+    }
 }

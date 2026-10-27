@@ -2,7 +2,7 @@
 {% load static %}
 {% block meta %}
 <link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
-<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-qbtR4rS9RCnu4yegGS36OBQBmb6DGAGmArdakWggiCwZaUxaIY1R9DdQrPFiFVbX" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/htmx.org@1.9.12"  crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,6 @@
   </div>
 </div>
 
-{% include 'components/toast.html' %}
 <script>
 document.body.addEventListener('showToast', function (evt) {
     showToast(evt.detail.title, evt.detail.message, evt.detail.type);
