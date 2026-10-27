@@ -143,7 +143,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+LOGIN_URL = 'userprofile:login'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    BASE_DIR / 'userprofile' / 'templates',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 WHITENOISE_USE_FINDERS = True
 

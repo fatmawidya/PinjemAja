@@ -1,0 +1,8 @@
+<form id="login-form-container"
+      hx-post="{% url 'userprofile:login_htmx' %}"
+      hx-target="#login-form-container"
+      hx-swap="outerHTML">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-pinjemaja-primary w-100">Login</button>
+</form>

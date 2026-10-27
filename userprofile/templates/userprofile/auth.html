@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block meta %}
+<link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
+<script src="https://unpkg.com/htmx.org@1.9.12"  crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    {% block auth_content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+document.body.addEventListener('showToast', function (evt) {
+    showToast(evt.detail.title, evt.detail.message, evt.detail.type);
+});
+</script>
+{% endblock %}
