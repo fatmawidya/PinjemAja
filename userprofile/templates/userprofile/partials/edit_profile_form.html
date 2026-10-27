@@ -5,6 +5,21 @@
       hx-encoding="multipart/form-data">
     {% csrf_token %}
 
+    {% if profile.avatar %}
+    <div class="mb-3 text-center">
+        <img src="{{ profile.avatar.url }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;" class="mb-2">
+        <br>
+        <button type="button"
+                class="btn btn-sm btn-pinjemaja-danger"
+                hx-post="{% url 'userprofile:delete_avatar' %}"
+                hx-target="#edit-profile-form-container"
+                hx-swap="outerHTML"
+                hx-confirm="Yakin mau hapus foto profil?">
+            Hapus Foto Profil
+        </button>
+    </div>
+    {% endif %}
+
     <div class="mb-3">
         <label class="form-label">Provinsi</label>
         <select id="province-select" class="form-select">
