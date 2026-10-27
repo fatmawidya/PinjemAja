@@ -1,0 +1,8 @@
+<form id="register-form-container"
+      hx-post="{% url 'userprofile:register_htmx' %}"
+      hx-target="#register-form-container"
+      hx-swap="outerHTML">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-pinjemaja-primary w-100">Daftar</button>
+</form>
