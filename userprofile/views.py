@@ -78,31 +78,62 @@ def edit_profile(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
+            profile = form.save(commit=False)
+            profile.province = request.POST.get('province', '').strip()
+            profile.city = request.POST.get('city', '').strip()
+            profile.district = request.POST.get('district', '').strip()
+            profile.subdistrict = request.POST.get('subdistrict', '').strip()
+            profile.street_address = request.POST.get('street_address', '').strip()
+            profile.save()
             return redirect('userprofile:my_profile')
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'userprofile/edit_profile.html', {'form': form, 'active_menu': 'profil'})
 
+
 @require_POST
 @login_required
 def edit_profile_htmx(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    form = ProfileForm(request.POST, request.FILES, instance=profile)
+    form = ProfileForm(
+        request.POST,
+        request.FILES,
+        instance=profile
+    )
 
     if form.is_valid():
-        form.save()
-        response = render(request, 'userprofile/partials/edit_profile_form.html', {'form': form, 'profile': profile})
-        response['HX-Trigger'] = json.dumps({
-            'showToast': {'title': 'Berhasil', 'message': 'Profil berhasil diperbarui!', 'type': 'success'}
-        })
+        profile = form.save(commit=False)
+
+        profile.province = request.POST.get('province', '').strip()
+        profile.city = request.POST.get('city', '').strip()
+        profile.district = request.POST.get('district', '').strip()
+        profile.subdistrict = request.POST.get('subdistrict', '').strip()
+        profile.street_address = request.POST.get(
+            'street_address', ''
+        ).strip()
+
+        profile.save()
+
+        response = HttpResponse(status=204)
+        response['HX-Redirect'] = reverse(
+            'userprofile:my_profile'
+        )
         return response
 
-    response = render(request, 'userprofile/partials/edit_profile_form.html', {'form': form, 'profile': profile})
+    response = render(
+        request,
+        'userprofile/partials/edit_profile_form.html',
+        {'form': form, 'profile': profile}
+    )
     response['HX-Trigger'] = json.dumps({
-        'showToast': {'title': 'Gagal menyimpan', 'message': 'Periksa kembali data yang kamu masukkan.', 'type': 'error'}
+        'showToast': {
+            'title': 'Gagal menyimpan',
+            'message': 'Periksa kembali data yang kamu masukkan.',
+            'type': 'error'
+        }
     })
     return response
+
 
 @login_required
 def public_profile(request, user_id):
