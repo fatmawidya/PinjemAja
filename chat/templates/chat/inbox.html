@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block meta %}
+<title>Pesan - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'chat/chat.css' %}">
+{% endblock meta %}
+{% block content %}
+<div class="pjchat-page">
+  <div class="pjchat-shell">
+    {% include "chat/_sidebar.html" %}
+    <main class="pjchat-empty-pane">
+      <div class="pjchat-empty-illustration" aria-hidden="true">💬</div>
+      <h2>Selamat datang di Chat!</h2>
+      <p>Pilih percakapan di sebelah kiri untuk mulai mengirim pesan.</p>
+    </main>
+  </div>
+</div>
+{% endblock content %}

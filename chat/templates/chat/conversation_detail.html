@@ -1,0 +1,313 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+<title>Chat dengan {{ other_participant.username }} - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'chat/chat.css' %}">
+{% endblock meta %}
+
+{% block content %}
+<div class="pjchat-page">
+    <div class="pjchat-shell">
+
+        <!-- Sidebar daftar percakapan -->
+        {% include "chat/_sidebar.html" %}
+
+        <!-- Panel chat kanan -->
+        <main class="pjchat-pane">
+
+            <!-- Header -->
+            <header class="pjchat-header">
+                <span class="pjchat-avatar">
+                    {{ other_participant.username|first|upper }}
+                </span>
+
+                <div class="pjchat-contact">
+                    <strong>{{ other_participant.username }}</strong>
+
+                    <small>
+                        {% if conversation.item %}
+                            Barang: {{ conversation.item.name }}
+                        {% else %}
+                            Tidak ada barang terkait
+                        {% endif %}
+                    </small>
+                </div>
+            </header>
+
+            <!-- Riwayat pesan -->
+            <div
+                class="pjchat-messages"
+                id="pjchat-messages"
+                aria-label="Riwayat pesan">
+
+                {% for message in chat_messages %}
+
+                    <!-- Satu pesan -->
+                    <div class="pjchat-message{% if message.sender_id == request.user.pk %} pjchat-message--mine{% endif %}">
+
+                        <!-- Bubble membungkus teks, jam, dan menu -->
+                        <div class="pjchat-bubble{% if message.deleted_for_everyone %} pjchat-bubble--deleted{% endif %}">
+
+                            <!-- Isi pesan -->
+                            {% if message.deleted_for_everyone %}
+
+                                <div class="pjchat-deleted-text">
+                                    <span aria-hidden="true">⊘</span>
+                                    <span>{% if message.sender_id == request.user.pk %}Kamu menghapus pesan ini{% else %}Pesan ini telah dihapus{% endif %}</span>
+                                </div>
+
+                            {% else %}
+
+                                <div
+                                    class="pjchat-message-text"
+                                    id="pjchat-text-{{ message.pk }}">{{ message.text }}</div>
+
+                            {% endif %}
+
+                            <!-- Jam -->
+                            <div class="pjchat-message-meta">
+                                {{ message.created_at|date:"H:i" }}
+                            </div>
+
+                            <!-- Menu opsi pesan -->
+                            <details class="pjchat-actions">
+
+                                <summary
+                                    aria-label="Opsi pesan"
+                                    title="Opsi pesan">
+                                    <span aria-hidden="true">⌄</span>
+                                </summary>
+
+                                <div class="pjchat-actions-menu">
+
+                                    <!-- Edit hanya untuk pesan sendiri -->
+                                    {% if message.sender_id == request.user.pk and not message.deleted_for_everyone %}
+
+                                        <button
+                                            type="button"
+                                            class="pjchat-menu-item js-pjchat-edit"
+                                            data-message-id="{{ message.pk }}"
+                                            data-edit-url="{% url 'chat:edit_message' message.pk %}">
+                                            Edit pesan
+                                        </button>
+
+                                    {% endif %}
+
+                                    <!-- Semua pesan boleh dihapus untuk diri sendiri -->
+                                    <button
+                                        type="button"
+                                        class="pjchat-menu-item pjchat-menu-item--danger js-pjchat-delete"
+                                        data-delete-url="{% url 'chat:delete_message' message.pk %}"
+                                        data-own-message="{% if message.sender_id == request.user.pk and not message.deleted_for_everyone %}true{% else %}false{% endif %}">
+                                        Hapus pesan
+                                    </button>
+
+                                </div>
+                            </details>
+
+                        </div>
+                        <!-- Penutup bubble -->
+
+                    </div>
+                    <!-- Penutup satu pesan -->
+
+                {% empty %}
+
+                    <div class="pjchat-no-messages">
+                        Belum ada pesan. Mulai percakapan di bawah.
+                    </div>
+
+                {% endfor %}
+
+            </div>
+            <!-- Penutup area riwayat pesan -->
+
+            <!-- Kolom kirim tetap di bawah -->
+            <footer class="pjchat-composer">
+
+                <form
+                    method="post"
+                    action="{% url 'chat:conversation_detail' conversation.pk %}"
+                    class="pjchat-compose-form">
+
+                    {% csrf_token %}
+
+                    <label
+                        for="{{ form.text.id_for_label }}"
+                        class="pjchat-sr-only">
+                        Tulis pesan
+                    </label>
+
+                    {{ form.text }}
+
+                    <button type="submit" class="pjchat-send">
+                        Kirim ➤
+                    </button>
+
+                </form>
+
+                {% if form.text.errors %}
+                    <div class="pjchat-form-error">
+                        {{ form.text.errors }}
+                    </div>
+                {% endif %}
+
+            </footer>
+
+        </main>
+    </div>
+</div>
+
+
+<!-- ====================================
+     POPUP EDIT PESAN
+     ==================================== -->
+
+<dialog
+    id="pjchat-edit-dialog"
+    class="pjchat-dialog"
+    aria-labelledby="pjchat-edit-title">
+
+    <div class="pjchat-dialog-head">
+
+        <h2 id="pjchat-edit-title">Edit pesan</h2>
+
+        <button
+            type="button"
+            class="pjchat-dialog-close js-pjchat-close"
+            aria-label="Tutup">
+            &times;
+        </button>
+
+    </div>
+
+    <p class="pjchat-dialog-caption">
+        Pesan sebelumnya
+    </p>
+
+    <div
+        id="pjchat-edit-preview"
+        class="pjchat-edit-preview"></div>
+
+    <form method="post" id="pjchat-edit-form">
+
+        {% csrf_token %}
+
+        <label
+            for="pjchat-edit-text"
+            class="pjchat-dialog-caption">
+            Ubah pesan
+        </label>
+
+        <textarea
+            id="pjchat-edit-text"
+            name="text"
+            maxlength="2000"
+            rows="3"
+            required></textarea>
+
+        <p
+            id="pjchat-edit-error"
+            class="pjchat-form-error"
+            role="alert"></p>
+
+        <div class="pjchat-dialog-actions">
+
+            <button
+                type="button"
+                class="pjchat-button-secondary js-pjchat-close">
+                Batal
+            </button>
+
+            <button
+                type="submit"
+                class="pjchat-button-primary">
+                Simpan perubahan
+            </button>
+
+        </div>
+
+    </form>
+</dialog>
+
+
+<!-- ====================================
+     POPUP HAPUS PESAN
+     ==================================== -->
+
+<dialog
+    id="pjchat-delete-dialog"
+    class="pjchat-dialog"
+    aria-labelledby="pjchat-delete-title">
+
+    <div class="pjchat-dialog-head">
+
+        <h2 id="pjchat-delete-title">Hapus pesan</h2>
+
+        <button
+            type="button"
+            class="pjchat-dialog-close js-pjchat-close"
+            aria-label="Tutup">
+            &times;
+        </button>
+
+    </div>
+
+    <p class="pjchat-dialog-caption">
+        Pilih bagaimana kamu ingin menghapus pesan ini.
+    </p>
+
+    <form method="post" id="pjchat-delete-form">
+
+        {% csrf_token %}
+
+        <div class="pjchat-delete-choices">
+
+            <!-- Hapus hanya dari akun sendiri -->
+            <button
+                type="submit"
+                name="scope"
+                value="me"
+                class="pjchat-delete-choice">
+
+                <strong>Hapus untuk saya</strong>
+                <small>Pesan hanya hilang dari chat milikmu.</small>
+
+            </button>
+
+            <!-- Hanya muncul untuk pesan sendiri -->
+            <button
+                type="submit"
+                name="scope"
+                value="everyone"
+                id="pjchat-delete-everyone"
+                class="pjchat-delete-choice pjchat-delete-choice--danger">
+
+                <strong>Hapus untuk semua orang</strong>
+                <small>Isi pesan diganti pemberitahuan untuk kedua peserta.</small>
+
+            </button>
+
+        </div>
+
+        <div class="pjchat-dialog-actions">
+
+            <button
+                type="button"
+                class="pjchat-button-secondary js-pjchat-close">
+                Batal
+            </button>
+
+        </div>
+
+    </form>
+</dialog>
+
+{% endblock content %}
+
+
+{% block extra_js %}
+<script src="{% static 'chat/chat.js' %}"></script>
+{% endblock extra_js %}

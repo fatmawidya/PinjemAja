@@ -1,0 +1,76 @@
+<aside class="pjchat-sidebar">
+    <div class="pjchat-sidebar-header">
+        <h2>Pesan</h2>
+    </div>
+
+    <div class="pjchat-sidebar-toolbar">
+        <form method="get" class="pjchat-search-form">
+            <input
+                type="text"
+                name="q"
+                value="{{ chat_search_query }}"
+                placeholder="Cari nama pengguna..."
+                class="pjchat-search-input"
+            >
+            <input type="hidden" name="filter" value="{{ chat_filter }}">
+        </form>
+
+        <div class="pjchat-filter-row">
+            <a
+                href="?filter=all&q={{ chat_search_query|urlencode }}"
+                class="pjchat-filter-chip {% if chat_filter == 'all' %}pjchat-filter-chip--active{% endif %}"
+            >
+                All
+                <span class="pjchat-filter-count">{{ chat_all_count }}</span>
+            </a>
+
+            <a
+                href="?filter=unread&q={{ chat_search_query|urlencode }}"
+                class="pjchat-filter-chip {% if chat_filter == 'unread' %}pjchat-filter-chip--active{% endif %}"
+            >
+                Unread
+                <span class="pjchat-filter-count">{{ chat_unread_count }}</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="pjchat-sidebar-list">
+        {% for conv in conversations %}
+            <a
+                href="{% url 'chat:conversation_detail' conv.pk %}?filter={{ chat_filter }}&q={{ chat_search_query|urlencode }}"
+                class="pjchat-thread {% if conv.is_active %}pjchat-thread--active{% endif %}"
+            >
+                <span class="pjchat-avatar">
+                    {{ conv.other_participant.username|first|upper }}
+                </span>
+
+                <div class="pjchat-thread-info">
+                    <strong>{{ conv.other_participant.username }}</strong>
+                    <small>
+                        {% if conv.item %}
+                            Barang: {{ conv.item.name }}
+                        {% else %}
+                            Tidak ada barang terkait
+                        {% endif %}
+                    </small>
+                </div>
+
+                {% if conv.unread_count > 0 %}
+                    <span class="pjchat-thread-badge">
+                        {{ conv.unread_count }}
+                    </span>
+                {% endif %}
+            </a>
+         {% empty %}
+
+            <div class="pjchat-empty-sidebar">
+                {% if chat_search_query or chat_filter == 'unread' %}
+                    Tidak ada percakapan yang cocok.
+                {% else %}
+                    Belum ada percakapan.
+                {% endif %}
+            </div>
+
+        {% endfor %}
+    </div>
+</aside>
