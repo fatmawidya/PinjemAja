@@ -1,57 +1,189 @@
 <form id="edit-profile-form-container"
+      method="post"
+      enctype="multipart/form-data"
       hx-post="{% url 'userprofile:edit_profile_htmx' %}"
       hx-target="#edit-profile-form-container"
       hx-swap="outerHTML"
       hx-encoding="multipart/form-data">
+
     {% csrf_token %}
 
-    {% if profile.avatar %}
-    <div class="mb-3 text-center">
-        <img src="{{ profile.avatar.url }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;" class="mb-2">
-        <br>
-        <button type="button"
-                class="btn btn-sm btn-pinjemaja-danger"
-                hx-post="{% url 'userprofile:delete_avatar' %}"
-                hx-target="#edit-profile-form-container"
-                hx-swap="outerHTML"
-                hx-confirm="Yakin mau hapus foto profil?">
-            Hapus Foto Profil
-        </button>
+    
+    <div class="mb-4 text-center">
+        <div class="profile-avatar mx-auto mb-3"
+            style="width: 110px; height: 110px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+
+            {% if profile.avatar and profile.avatar.name %}
+                <img src="{{ profile.avatar.url }}"
+                    alt="Foto profil"
+                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            {% else %}
+                <svg viewBox="0 0 24 24"
+                    width="48"
+                    height="48"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                    aria-label="Belum ada foto profil">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+                </svg>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-2">
+            <button type="button"
+                    class="btn btn-sm btn-pinjemaja-danger"
+                    hx-post="{% url 'userprofile:delete_avatar' %}"
+                    hx-target="#edit-profile-form-container"
+                    hx-swap="outerHTML"
+                    hx-confirm="Yakin ingin menghapus foto profil?"
+                    hx-disabled-elt="this">
+                Hapus Avatar
+            </button>
+
+            <button type="button"
+                    class="btn btn-sm btn-pinjemaja-primary"
+                    onclick="document.getElementById('id_avatar').click()">
+                Update Avatar
+            </button>
+        </div>
     </div>
+
+    <!-- Input file disembunyikan -->
+    <div style="display: none;">
+        {{ form.avatar }}
+    </div>
+
+    {% if form.avatar.errors %}
+        <div class="text-danger mb-3">
+            {{ form.avatar.errors }}
+        </div>
     {% endif %}
 
+
+    <!-- Nomor telepon -->
     <div class="mb-3">
-        <label class="form-label">Provinsi</label>
-        <select id="province-select" class="form-select">
-            <option value="">Pilih Provinsi</option>
+        <label for="{{ form.phone_number.id_for_label }}"
+               class="form-label">
+            Nomor Telepon
+        </label>
+
+        {{ form.phone_number }}
+
+        {% if form.phone_number.errors %}
+            <div class="form-error">{{ form.phone_number.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Bio -->
+    <div class="mb-3">
+        <label for="{{ form.bio.id_for_label }}" class="form-label">
+            Tentang Saya
+        </label>
+
+        {{ form.bio }}
+
+        {% if form.bio.errors %}
+            <div class="form-error">{{ form.bio.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Provinsi -->
+    <div class="mb-3">
+        <label for="province-select" class="form-label">Provinsi</label>
+        <select id="province-select"
+                class="form-select"
+                data-current="{{ profile.province }}">
+            <option value="">Memuat provinsi...</option>
         </select>
     </div>
+
+    <!-- Kota/kabupaten -->
     <div class="mb-3">
-        <label class="form-label">Kota/Kabupaten</label>
-        <select id="city-select" name="city" class="form-select" disabled>
+        <label for="city-select" class="form-label">
+            Kota/Kabupaten
+        </label>
+        <select id="city-select"
+                class="form-select"
+                data-current="{{ profile.city }}"
+                disabled>
             <option value="">Pilih Kota/Kabupaten</option>
         </select>
     </div>
+
+    <!-- Kecamatan -->
     <div class="mb-3">
-        <label class="form-label">Kecamatan</label>
-        <select id="district-select" name="district" class="form-select" disabled>
+        <label for="district-select" class="form-label">Kecamatan</label>
+        <select id="district-select"
+                class="form-select"
+                data-current="{{ profile.district }}"
+                disabled>
             <option value="">Pilih Kecamatan</option>
         </select>
     </div>
+
+    <!-- Kelurahan -->
     <div class="mb-3">
-        <label class="form-label">Kelurahan</label>
-        <select id="subdistrict-select" name="subdistrict" class="form-select" disabled>
+        <label for="subdistrict-select" class="form-label">
+            Kelurahan
+        </label>
+        <select id="subdistrict-select"
+                class="form-select"
+                data-current="{{ profile.subdistrict }}"
+                disabled>
             <option value="">Pilih Kelurahan</option>
         </select>
     </div>
+
+    <!-- Hidden inputs: yang dikirim ke Django adalah nama wilayah -->
+    <input type="hidden"
+           name="province"
+           id="province-hidden"
+           value="{{ profile.province }}">
+
+    <input type="hidden"
+           name="city"
+           id="city-hidden"
+           value="{{ profile.city }}">
+
+    <input type="hidden"
+           name="district"
+           id="district-hidden"
+           value="{{ profile.district }}">
+
+    <input type="hidden"
+           name="subdistrict"
+           id="subdistrict-hidden"
+           value="{{ profile.subdistrict }}">
+
+    <!-- Alamat jalan -->
     <div class="mb-3">
-        <label class="form-label">Alamat Jalan</label>
-        <textarea name="street_address" class="form-control" placeholder="Nama jalan, nomor rumah, RT/RW">{{ profile.street_address }}</textarea>
+        <label for="street-address" class="form-label">
+            Alamat Jalan
+        </label>
+        <textarea id="street-address"
+                  name="street_address"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Nama jalan, nomor rumah, RT/RW">{{ profile.street_address }}</textarea>
     </div>
-    <input type="hidden" name="province" id="province-hidden">
 
-    {{ form.as_p }}
+    {% if form.non_field_errors %}
+        <div class="form-error mb-3">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
 
-    <button type="submit" class="btn btn-pinjemaja-primary">Simpan Profil</button>
-    <a href="{% url 'userprofile:my_profile' %}" class="btn btn-link">Kembali</a>
+    <!-- Tombol form -->
+    <div class="profile-form-actions">
+        <button type="submit" class="btn btn-pinjemaja-primary">
+            Simpan Profil
+        </button>
+
+        <a href="{% url 'userprofile:my_profile' %}"
+           class="btn btn-pinjemaja-back">
+            Kembali
+        </a>
+    </div>
 </form>
