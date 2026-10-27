@@ -108,3 +108,25 @@ def edit_profile_htmx(request):
 def public_profile(request, user_id):
     profile = get_object_or_404(Profile, user__id=user_id)
     return render(request, 'userprofile/public_profile.html', {'profile': profile})
+
+@login_required
+@require_POST
+def delete_avatar(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.avatar:
+        profile.avatar.delete(save=False)
+        profile.avatar = None
+        profile.save()
+        message, toast_type = 'Foto profil berhasil dihapus.', 'success'
+    else:
+        message, toast_type = 'Belum ada foto profil untuk dihapus.', 'normal'
+
+    form = ProfileForm(instance=profile)
+    response = render(request, 'userprofile/partials/edit_profile_form.html', {
+        'form': form, 'profile': profile
+    })
+    response['HX-Trigger'] = json.dumps({
+        'showToast': {'title': 'Foto Profil', 'message': message, 'type': toast_type}
+    })
+    return response

@@ -1,3 +1,4 @@
+import json
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -122,12 +123,14 @@ class AuthorizationTest(TestCase):
         response = self.client.get(reverse('userprofile:public_profile', args=[user.id]))
         self.assertEqual(response.status_code, 302)
 
-    def test_public_profile_does_not_expose_private_fields(self):
-        """Pastikan nomor HP dan alamat tidak bocor di halaman publik."""
+    def test_public_profile_does_not_expose_sensitive_fields(self):
         owner = User.objects.create_user(username='owner', password='pass123')
         profile = Profile.objects.get(user=owner)
         profile.phone_number = '08123456789'
-        profile.address = 'Jl. Rahasia No. 1'
+        profile.city = 'Jakarta Selatan'
+        profile.district = 'Kebayoran Baru'
+        profile.subdistrict = 'Gandaria'
+        profile.street_address = 'Jl. Rahasia No. 1'
         profile.save()
 
         viewer = User.objects.create_user(username='viewer', password='pass123')
@@ -135,8 +138,10 @@ class AuthorizationTest(TestCase):
         response = self.client.get(reverse('userprofile:public_profile', args=[owner.id]))
 
         self.assertNotContains(response, '08123456789')
+        self.assertContains(response, 'Jakarta Selatan')
+        self.assertNotContains(response, 'Kebayoran Baru')
+        self.assertNotContains(response, 'Gandaria')
         self.assertNotContains(response, 'Jl. Rahasia No. 1')
-
 
 class EditProfileTest(TestCase):
     def setUp(self):
@@ -149,18 +154,17 @@ class EditProfileTest(TestCase):
         response = self.client.get(self.edit_url)
         self.assertEqual(response.status_code, 200)
 
-    def test_edit_profile_updates_data(self):
-        response = self.client.post(self.edit_url, {
-            'phone_number': '08123456789',
-            'address': 'Jakarta',
-            'bio': 'Halo, saya pengguna PinjemAja',
-        })
-        self.assertEqual(response.status_code, 302)
-        self.user.profile.refresh_from_db()
-        self.assertEqual(self.user.profile.phone_number, '08123456789')
-        self.assertEqual(self.user.profile.address, 'Jakarta')
-        self.assertEqual(self.user.profile.bio, 'Halo, saya pengguna PinjemAja')
-
+def test_edit_profile_updates_data(self):
+    response = self.client.post(self.edit_url, {
+        'phone_number': '08123456789',
+        'city': 'Jakarta Selatan',
+        'bio': 'Halo, saya pengguna PinjemAja',
+    })
+    self.assertEqual(response.status_code, 302)
+    self.user.profile.refresh_from_db()
+    self.assertEqual(self.user.profile.phone_number, '08123456789')
+    self.assertEqual(self.user.profile.city, 'Jakarta Selatan')
+    self.assertEqual(self.user.profile.bio, 'Halo, saya pengguna PinjemAja')
     def test_edit_profile_only_affects_own_profile(self):
         """User A tidak boleh bisa mengubah profile User B lewat endpoint edit."""
         other_user = User.objects.create_user(username='otheruser', password='pass123')
@@ -191,3 +195,92 @@ class PublicProfileViewTest(TestCase):
     def test_public_profile_404_for_nonexistent_user(self):
         response = self.client.get(reverse('userprofile:public_profile', args=[9999]))
         self.assertEqual(response.status_code, 404)
+
+
+class RegisterHtmxViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('userprofile:register_htmx')
+
+    def test_register_htmx_success_returns_204_with_redirect_header(self):
+        response = self.client.post(self.url, {
+            'username': 'htmxuser',
+            'email': 'htmx@test.com',
+            'password1': 'ComplexPass123',
+            'password2': 'ComplexPass123',
+        })
+        self.assertEqual(response.status_code, 204)
+        self.assertIn('HX-Redirect', response.headers)
+        self.assertTrue(User.objects.filter(username='htmxuser').exists())
+
+    def test_register_htmx_failure_rerenders_form_with_error_trigger(self):
+        response = self.client.post(self.url, {
+            'username': 'htmxuser2',
+            'email': 'htmx2@test.com',
+            'password1': 'ComplexPass123',
+            'password2': 'WrongPass456',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('HX-Trigger', response.headers)
+        trigger_data = json.loads(response.headers['HX-Trigger'])
+        self.assertEqual(trigger_data['showToast']['type'], 'error')
+        self.assertFalse(User.objects.filter(username='htmxuser2').exists())
+
+
+class LoginHtmxViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.url = reverse('userprofile:login_htmx')
+
+    def test_login_htmx_success_returns_204_with_redirect_header(self):
+        response = self.client.post(self.url, {
+            'username': 'testuser', 'password': 'testpass123'
+        })
+        self.assertEqual(response.status_code, 204)
+        self.assertIn('HX-Redirect', response.headers)
+
+    def test_login_htmx_failure_rerenders_form_with_error_trigger(self):
+        response = self.client.post(self.url, {
+            'username': 'testuser', 'password': 'wrongpassword'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('HX-Trigger', response.headers)
+        trigger_data = json.loads(response.headers['HX-Trigger'])
+        self.assertEqual(trigger_data['showToast']['type'], 'error')
+
+
+class EditProfileHtmxViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.client = Client()
+        self.client.login(username='testuser', password='testpass123')
+        self.url = reverse('userprofile:edit_profile_htmx')
+
+    def test_edit_profile_htmx_requires_login(self):
+        self.client.logout()
+        response = self.client.post(self.url, {'phone_number': '0812'})
+        self.assertEqual(response.status_code, 302)
+
+    def test_edit_profile_htmx_success_updates_data_and_triggers_success_toast(self):
+        response = self.client.post(self.url, {
+            'phone_number': '08123456789',
+            'bio': 'Halo dari HTMX',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('HX-Trigger', response.headers)
+        trigger_data = json.loads(response.headers['HX-Trigger'])
+        self.assertEqual(trigger_data['showToast']['type'], 'success')
+
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.phone_number, '08123456789')
+        self.assertEqual(self.user.profile.bio, 'Halo dari HTMX')
+
+    def test_edit_profile_htmx_invalid_data_triggers_error_toast(self):
+        response = self.client.post(self.url, {
+            'phone_number': 'x' * 300,  # melebihi max_length=20
+            'bio': 'test',
+        })
+        self.assertEqual(response.status_code, 200)
+        trigger_data = json.loads(response.headers['HX-Trigger'])
+        self.assertEqual(trigger_data['showToast']['type'], 'error')
