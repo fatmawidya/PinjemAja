@@ -62,7 +62,7 @@
                                         Tolak
                                     </button>
                                 </form>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="terima">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
                                     {% csrf_token %}
                                     <input type="hidden" name="status_filter" value="{{ status_filter }}">
                                     <button type="submit" name="aksi" value="terima"

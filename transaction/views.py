@@ -41,62 +41,25 @@ def form_pinjam(request, barang_id):
     }
     return render(request, "form_pinjam.html", context)
     
-# @login_required
+@login_required
 def riwayat_meminjam(request):
-    transaksi_list = (Transaksi.objects.filter(peminjam=request.user).select_related('barang', 'pemilik').order_by('-created_at'))
-    
     status_filter = request.GET.get("status", "semua")
-    status_map = {
-        "berlangsung": [
-            "menunggu_verifikasi",
-            "menunggu_pembayaran",
-            "menunggu_konfirmasi",
-            "disetujui" ],
-        "selesai": ["selesai"],
-        "dibatalkan": [
-            "dibatalkan",
-            "ditolak",
-        ],
-    }
-
-    if status_filter in status_map:
-        transaksi_list = transaksi_list.filter(status__in=status_map[status_filter])
-
-    context = {
-        "transaksi_list": transaksi_list,
-        "status_filter": status_filter,
-    }
-
-    return render(request, "riwayat_meminjam.html", context)
+    transaksi_list = _get_transaksi_list(request.user, status_filter, 'peminjam')
+    context = {'transaksi_list': transaksi_list, 'status_filter': status_filter, 'is_peminjam': True}
+    if _is_ajax(request):
+        return render(request, 'partials/transaksi_list.html', context)
+    return render(request, 'riwayat_meminjam.html', context)
     
-# @login_required
+@login_required
 def permintaan_masuk(request):
-    transaksi_list = (Transaksi.objects.filter(pemilik=request.user).select_related("barang", "peminjam",).order_by("-created_at"))
     status_filter = request.GET.get("status", "semua")
-    status_map = {
-            "berlangsung": [
-                "menunggu_verifikasi",
-                "menunggu_pembayaran",
-                "menunggu_konfirmasi",
-                "disetujui" ],
-            "selesai": ["selesai"],
-            "dibatalkan": [
-                "dibatalkan",
-                "ditolak",
-            ],
-        }
-    
-    if status_filter in status_map:
-        transaksi_list = transaksi_list.filter(status__in=status_map[status_filter])
-
-    context = {
-        "transaksi_list": transaksi_list,
-        "status_filter": status_filter,
-    }
-
+    transaksi_list = _get_transaksi_list(request.user, status_filter, 'pemilik')
+    context = {'transaksi_list': transaksi_list, 'status_filter': status_filter, 'is_peminjam': False}
+    if _is_ajax(request):
+        return render(request, 'partials/transaksi_list.html', context)
     return render(request, "permintaan_masuk.html", context)
 
-# @login_required
+@login_required
 def upload_bukti(request, transaksi_id):
     transaksi = get_object_or_404(
         Transaksi.objects.select_related("barang", "pemilik"),
@@ -119,9 +82,10 @@ def upload_bukti(request, transaksi_id):
         "transaksi": transaksi,
         "form": form,
         "durasi": durasi,
+        "total_harga": transaksi.barang.price * durasi,
     })
 
-# @login_required
+@login_required
 def detail_transaksi(request, transaksi_id):
     transaksi = get_object_or_404 (Transaksi.objects.select_related("barang", "peminjam", "pemilik"), pk=transaksi_id)
 
@@ -133,6 +97,7 @@ def detail_transaksi(request, transaksi_id):
     return render(request, "detail_transaksi.html", {
         "transaksi": transaksi,
         "durasi": durasi,
+        "total_harga": transaksi.barang.price * durasi,
         "is_peminjam": request.user == transaksi.peminjam,
     })
 
@@ -164,11 +129,12 @@ def edit_transaksi(request, transaksi_id):
     else:
         form = FormPinjam(instance=transaksi)
 
-    return render(request, 'form_pinjam.html', {
-        'form': form,
+    durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
+    return render(request, 'detail_transaksi.html', {
         'transaksi': transaksi,
-        'barang': transaksi.barang,
-        'is_edit': True,
+        'durasi': durasi,
+        'total_harga': transaksi.barang.price * durasi,
+        'is_peminjam': transaksi.peminjam_id == request.user.pk,
     })
 
 def _is_ajax(request):
@@ -234,7 +200,7 @@ def aksi(request, transaksi_id):
     transitions = {
         ('menunggu_verifikasi', 'batal', False): ('dibatalkan', 'Peminjam'),
         ('menunggu_verifikasi', 'batal', True):  ('dibatalkan', 'Pemilik'),
-        ('menunggu_verifikasi', 'terima', False):    ('menunggu_pembayaran', None),
+        ('menunggu_verifikasi', 'terima', True):     ('menunggu_pembayaran', None),
         ('menunggu_konfirmasi', 'tolak', True):     ('ditolak', None),
         ('menunggu_konfirmasi', 'terima', True):    ('disetujui', None),
         ('disetujui', 'selesai', False):            ('selesai', None),
@@ -258,7 +224,7 @@ def aksi(request, transaksi_id):
 
     # ===== 6. validasi alasan tolak =====
     alasan = request.POST.get('alasan', '').strip()
-    if action == 'tolak' and not alasan:
+    if action == 'tolak' and transaksi.status == 'menunggu_konfirmasi' and not alasan:
         if _is_ajax(request):
             return _toast_html('', 'Gagal', 'Alasan penolakan wajib diisi.', 'error', status=400)
         messages.error(request, 'Alasan penolakan wajib diisi.')
@@ -281,7 +247,7 @@ def aksi(request, transaksi_id):
         role = 'peminjam' if borrower else 'pemilik'
         transaksi_list = _get_transaksi_list(request.user, status_filter, role)
 
-        html = render_to_string('transaction/partials/transaksi_list.html', {
+        html = render_to_string('partials/transaksi_list.html', {
             'transaksi_list': transaksi_list,
             'is_peminjam': borrower,
             'is_pemilik': owner,
