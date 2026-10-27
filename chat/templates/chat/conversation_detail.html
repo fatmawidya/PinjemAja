@@ -40,12 +40,17 @@
             <div
                 class="pjchat-messages"
                 id="pjchat-messages"
+                data-messages-url="{% url 'chat:conversation_messages_json' conversation.pk %}"
+                data-edit-url-template="{% url 'chat:edit_message' 0 %}"
+                data-delete-url-template="{% url 'chat:delete_message' 0 %}"
                 aria-label="Riwayat pesan">
 
                 {% for message in chat_messages %}
 
                     <!-- Satu pesan -->
-                    <div class="pjchat-message{% if message.sender_id == request.user.pk %} pjchat-message--mine{% endif %}">
+                    <div
+                        class="pjchat-message{% if message.sender_id == request.user.pk %} pjchat-message--mine{% endif %}"
+                        data-message-id="{{ message.pk }}">
 
                         <!-- Bubble membungkus teks, jam, dan menu -->
                         <div class="pjchat-bubble{% if message.deleted_for_everyone %} pjchat-bubble--deleted{% endif %}">
