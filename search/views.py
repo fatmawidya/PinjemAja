@@ -2,7 +2,26 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Q
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from item.models import Item
+from .models import SearchHistory
+from .forms import SearchForm
+
+
+def save_search_history(request, query):
+    """
+    Menyimpan kata kunci pencarian ke SearchHistory untuk fitur riwayat pencarian (CRUD).
+    """
+    if not query or len(query.strip()) < 2:
+        return
+    q = query.strip()
+    user = request.user if request.user.is_authenticated else None
+    
+    # Cek pencarian terakhir agar tidak ada duplikasi berturut-turut
+    last_search = SearchHistory.objects.filter(user=user).first()
+    if not last_search or last_search.keyword.lower() != q.lower():
+        SearchHistory.objects.create(user=user, keyword=q)
 
 
 def get_filtered_items(request):
@@ -20,6 +39,7 @@ def get_filtered_items(request):
     # 1. Pencarian Kata Kunci (Keyword Search)
     query = request.GET.get('q', '').strip() or request.GET.get('input', '').strip()
     if query:
+        save_search_history(request, query)
         items = items.filter(
             Q(name__icontains=query) | Q(description__icontains=query)
         )
@@ -103,8 +123,14 @@ def search_page(request):
     if not selected_categories and selected_category:
         selected_categories = [c.strip() for c in selected_category.split(',') if c.strip()]
 
+    # Ambil 5 riwayat pencarian terakhir
+    user = request.user if request.user.is_authenticated else None
+    search_histories = SearchHistory.objects.filter(user=user)[:5]
+    form = SearchForm(request.GET)
+
     context = {
         'items': items,
+        'form': form,
         'categories': Item.CATEGORY_CHOICES,
         'conditions': Item.CONDITION_CHOICES,
         'locations': all_locations,
@@ -112,6 +138,7 @@ def search_page(request):
         'selected_categories': selected_categories,
         'selected_category': selected_category,
         'total_items': items.count(),
+        'search_histories': search_histories,
     }
     return render(request, 'search/search.html', context)
 
@@ -144,8 +171,40 @@ def search_api(request):
             'detail_url': reverse('item:item_detail', kwargs={'pk': item.pk}),
         })
 
+    # Kirim daftar riwayat pencarian terbaru untuk update AJAX frontend
+    user = request.user if request.user.is_authenticated else None
+    histories = SearchHistory.objects.filter(user=user)[:5]
+    history_list = [{'id': h.pk, 'keyword': h.keyword} for h in histories]
+
     return JsonResponse({
         'status': 'success',
         'count': len(data),
         'items': data,
+        'history': history_list,
     })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def delete_search_history(request, pk):
+    """
+    Menghapus 1 kata kunci dari riwayat pencarian (CRUD - Delete).
+    """
+    try:
+        user = request.user if request.user.is_authenticated else None
+        item = SearchHistory.objects.get(pk=pk, user=user)
+        item.delete()
+        return JsonResponse({'status': 'success', 'message': 'Riwayat berhasil dihapus.'})
+    except SearchHistory.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Riwayat tidak ditemukan.'}, status=404)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def clear_search_history(request):
+    """
+    Membersihkan semua riwayat pencarian user (CRUD - Delete all).
+    """
+    user = request.user if request.user.is_authenticated else None
+    SearchHistory.objects.filter(user=user).delete()
+    return JsonResponse({'status': 'success', 'message': 'Semua riwayat berhasil dibersihkan.'})

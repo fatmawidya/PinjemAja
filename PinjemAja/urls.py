@@ -24,9 +24,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', landing_page, name='landing_page'),
     path('item/', include('item.urls')),
+    path('transaction/', include('transaction.urls')),
     path('search/', include('search.urls')),
     path('profile/', include('userprofile.urls')),
+    path("chat/", include("chat.urls")),
 ]
 
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

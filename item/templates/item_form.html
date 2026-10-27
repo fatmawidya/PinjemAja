@@ -60,4 +60,14 @@
         </div>
     </div>
 </main>
+
+<script>
+    // Buat buang semua karakter selain angka saat user mengetik/paste
+    const priceInput = document.getElementById('id_price');
+    if (priceInput) {
+        priceInput.addEventListener('input', () => {
+            priceInput.value = priceInput.value.replace(/[^0-9]/g, '');
+        });
+    }
+</script>
 {% endblock content %}

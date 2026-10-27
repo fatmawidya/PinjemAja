@@ -1,0 +1,89 @@
+{% if transaksi_list %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        {% for transaksi in transaksi_list %}
+            <div class="col">
+                <article class="transaksi-card h-100">
+                    {% if transaksi.barang.cover_image %}
+                        <img src="{{ transaksi.barang.cover_image.image.url }}"
+                            alt="{{ transaksi.barang.name }}" class="transaksi-image">
+                    {% else %}
+                        <div class="transaksi-image image-placeholder">Gambar<br>Katalog</div>
+                    {% endif %}
+
+                    <div class="transaksi-body">
+                        <h2 class="barang-title">{{ transaksi.barang.name }}</h2>
+
+                        {% if transaksi.peminjam == request.user %}
+                            <p class="barang-owner">{{ transaksi.pemilik }}</p>
+                        {% else %}
+                            <p class="barang-peminjam">{{ transaksi.peminjam }}</p>
+                        {% endif %}
+
+                        <p class="tanggal-transaksi">
+                            {{ transaksi.tanggal_mulai|date:"d M Y" }} – {{ transaksi.tanggal_selesai|date:"d M Y" }}
+                        </p>
+
+                        <p class="status-text
+                            {% if transaksi.status == 'selesai' %} status-selesai
+                            {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %} status-batal
+                            {% else %}status-menunggu{% endif %}">
+                            {{ transaksi.get_status_display }}
+                        </p>
+
+                        {% if transaksi.peminjam == request.user %}
+                            {% if transaksi.status == 'menunggu_verifikasi' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="batal" class="btn action-danger">Batalkan</button>
+                                </form>
+
+                            {% elif transaksi.status == 'menunggu_pembayaran' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn action-primary">Unggah Bukti</a>
+
+                            {% elif transaksi.status == 'ditolak' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>
+                            {% else %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                            {% endif %}
+
+                        {% elif transaksi.pemilik == request.user%}
+
+                            {% if transaksi.status == 'menunggu_verifikasi' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="batal">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="batal"
+                                            class="btn transaksi-action action-danger">
+                                        Tolak
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="terima"
+                                            class="btn transaksi-action action-primary">
+                                        Terima
+                                    </button>
+                                </form>
+                            {% elif transaksi.status == 'menunggu_konfirmasi' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Bukti</a>
+                            {% else %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="riwayat-empty w-100">
+        <h3>Belum ada transaksi</h3>
+        <p>Transaksi kamu akan muncul di sini.</p>
+    </div>
+{% endif %}
