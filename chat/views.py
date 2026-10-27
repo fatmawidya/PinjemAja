@@ -2,7 +2,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -286,7 +286,14 @@ def edit_message(request, message_id):
             "Kamu tidak memiliki akses ke percakapan ini."
         )
 
+    
     if request.method == "POST":
+        # Cek apakah request berasal dari AJAX
+        is_ajax = (
+            request.headers.get("X-Requested-With")
+            == "XMLHttpRequest"
+        )
+
         # Isi form dengan data baru
         form = MessageForm(
             request.POST,
@@ -295,12 +302,36 @@ def edit_message(request, message_id):
 
         if form.is_valid():
             # UPDATE pesan di database
-            form.save()
+            updated_message = form.save()
 
+            # Respons JSON untuk AJAX
+            if is_ajax:
+                return JsonResponse({
+                    "success": True,
+                    "message": {
+                        "id": updated_message.pk,
+                        "sender": request.user.username,
+                        "sender_id": request.user.pk,
+                        "text": updated_message.text,
+                        "is_mine": True,
+                        "is_read": updated_message.is_read,
+                        "deleted_for_everyone": False,
+                        "created_at": updated_message.created_at.strftime("%H:%M"),
+                    }
+                }, status=200)
+
+            # Form biasa tetap menggunakan redirect
             return redirect(
                 "chat:conversation_detail",
                 conversation_id=conversation.pk
             )
+
+        # Jika AJAX dan input tidak valid
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "errors": form.errors.get_json_data(),
+            }, status=400)
 
     else:
         # GET: tampilkan form berisi pesan lama
@@ -316,7 +347,6 @@ def edit_message(request, message_id):
         "chat/edit_message.html",
         context
     )
-
 
 
 @login_required
@@ -339,26 +369,30 @@ def delete_message(request, message_id):
             "Kamu tidak memiliki akses ke percakapan ini."
         )
 
+    # Periksa apakah request berasal dari AJAX
+    is_ajax = (
+        request.headers.get("X-Requested-With")
+        == "XMLHttpRequest"
+    )
+
     # Ambil pilihan hapus dari form
     delete_scope = request.POST.get("scope")
 
     if delete_scope == "me":
         # HAPUS UNTUK SAYA
-        # Pesan tetap ada di database, tetapi
-        # disembunyikan dari user yang memilih opsi ini
+        # Pesan disembunyikan hanya untuk user ini
         message.hidden_for.add(request.user)
 
-    
     elif delete_scope == "everyone":
-        # Hanya pengirim yang boleh menghapus untuk semua orang
+        # Hanya pengirim yang boleh menghapus
+        # pesan untuk semua orang
         if message.sender_id != request.user.pk:
             raise PermissionDenied(
                 "Kamu hanya boleh menghapus pesan sendiri "
                 "untuk semua orang."
             )
 
-        # Jangan hapus objek Message.
-        # Kosongkan teks dan tandai pesan sebagai terhapus.
+        # Soft delete: jangan hapus objek Message
         message.text = ""
         message.deleted_for_everyone = True
         message.save(
@@ -366,17 +400,33 @@ def delete_message(request, message_id):
         )
 
     else:
-        # Tolak pilihan hapus yang tidak dikenal
+        # Pilihan hapus tidak valid
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "error": "Pilihan hapus tidak valid.",
+            }, status=400)
+
         return HttpResponseBadRequest(
             "Pilihan hapus tidak valid."
         )
 
-    # Tetap berada di percakapan yang sama
+    # Respons JSON untuk AJAX
+    if is_ajax:
+        return JsonResponse({
+            "success": True,
+            "message_id": message.pk,
+            "conversation_id": conversation.pk,
+            "scope": delete_scope,
+            "hidden_for_me": delete_scope == "me",
+            "deleted_for_everyone": message.deleted_for_everyone,
+        }, status=200)
+
+    # Form biasa tetap menggunakan redirect
     return redirect(
         "chat:conversation_detail",
         conversation_id=conversation.pk
     )
-
 
 # ============================================
 # DATA DELIVERY JSON - RIWAYAT PESAN CHAT
