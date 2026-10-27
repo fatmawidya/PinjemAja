@@ -35,4 +35,19 @@ urlpatterns = [
         views.delete_message,
         name="delete_message"
     ),
+
+    
+    path(
+        "<int:conversation_id>/messages/json/",
+        views.conversation_messages_json,
+        name="conversation_messages_json"
+    ),
+
+
+    path(
+        "sidebar/json/",
+        views.sidebar_json,
+        name="sidebar_json",
+    ),
+
 ]

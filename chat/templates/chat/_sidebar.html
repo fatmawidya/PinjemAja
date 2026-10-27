@@ -1,4 +1,8 @@
-<aside class="pjchat-sidebar">
+<aside
+    class="pjchat-sidebar"
+    data-sidebar-url="{% url 'chat:sidebar_json' %}"
+    data-active-conversation="{% if conversation %}{{ conversation.pk }}{% endif %}">
+
     <div class="pjchat-sidebar-header">
         <h2>Pesan</h2>
     </div>

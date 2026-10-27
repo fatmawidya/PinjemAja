@@ -13,7 +13,8 @@ from django.views.decorators.http import require_POST
 from item.models import Item
 from .models import Conversation, Message
 from .forms import MessageForm
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.template.loader import render_to_string
 
 def build_chat_sidebar_context(request, active_conversation_id=None):
     search_query = request.GET.get("q", "").strip()
@@ -164,10 +165,16 @@ def conversation_detail(request, conversation_id):
         other_participant = conversation.participant_2
     else:
         other_participant = conversation.participant_1
-
+    
     # KIRIM PESAN
     if request.method == "POST":
         form = MessageForm(request.POST)
+
+        # Cek apakah request berasal dari AJAX
+        is_ajax = (
+            request.headers.get("X-Requested-With")
+            == "XMLHttpRequest"
+        )
 
         if form.is_valid():
             message = form.save(commit=False)
@@ -175,12 +182,38 @@ def conversation_detail(request, conversation_id):
             message.sender = request.user
             message.save()
 
+            # Jika AJAX, kembalikan JSON tanpa redirect
+            if is_ajax:
+                return JsonResponse({
+                    "success": True,
+                    "message": {
+                        "id": message.pk,
+                        "sender": request.user.username,
+                        "sender_id": request.user.pk,
+                        "text": message.text,
+                        "is_mine": True,
+                        "is_read": message.is_read,
+                        "deleted_for_everyone": False,
+                        "created_at": message.created_at.strftime("%H:%M"),
+                    }
+                }, status=201)
+
+            # Form biasa tetap berfungsi seperti sebelumnya
             return redirect(
                 "chat:conversation_detail",
                 conversation_id=conversation.pk
             )
+
+        # Jika AJAX dan isi pesan tidak valid
+        if is_ajax:
+            return JsonResponse({
+                "success": False,
+                "errors": form.errors.get_json_data(),
+            }, status=400)
+
     else:
         form = MessageForm()
+
 
     # MARK AS READ
     # Saat penerima membuka chat, pesan masuk ditandai terbaca.
@@ -343,3 +376,108 @@ def delete_message(request, message_id):
         "chat:conversation_detail",
         conversation_id=conversation.pk
     )
+
+
+# ============================================
+# DATA DELIVERY JSON - RIWAYAT PESAN CHAT
+# ============================================
+
+@login_required
+@require_http_methods(["GET"])
+def conversation_messages_json(request, conversation_id):
+
+    # Cari percakapan
+    conversation = get_object_or_404(
+        Conversation,
+        pk=conversation_id
+    )
+
+    # Hanya peserta chat yang boleh melihat pesannya
+    if not conversation.includes(request.user):
+        raise PermissionDenied(
+            "Kamu tidak memiliki akses ke percakapan ini."
+        )
+
+    # ketika percakapan dibuka melalui AJAX.
+    Message.objects.filter(
+        conversation=conversation,
+        is_read=False,
+    ).exclude(
+        sender=request.user
+    ).exclude(
+        hidden_for=request.user
+    ).update(is_read=True)
+
+    # Ambil maksimal 100 pesan terbaru
+    # Pesan yang disembunyikan untuk user ini tidak ditampilkan
+    recent_messages = list(
+        Message.objects.filter(
+            conversation=conversation
+        )
+        .exclude(hidden_for=request.user)
+        .select_related("sender")
+        .order_by("-created_at", "-pk")[:100]
+    )
+
+    # Urutkan kembali dari pesan lama ke pesan baru
+    recent_messages.reverse()
+
+    messages_data = []
+
+    for message in recent_messages:
+
+        messages_data.append({
+            "id": message.pk,
+            "sender": message.sender.username,
+            "sender_id": message.sender_id,
+            "text": (
+                ""
+                if message.deleted_for_everyone
+                else message.text
+            ),
+            "is_mine": message.sender_id == request.user.pk,
+            "is_read": message.is_read,
+            "deleted_for_everyone": message.deleted_for_everyone,
+            "created_at": message.created_at.strftime("%H:%M"),
+        })
+
+    return JsonResponse({
+        "conversation_id": conversation.pk,
+        "messages": messages_data,
+    })
+
+
+# ============================================
+# AJAX: UPDATE SIDEBAR CHAT
+# ============================================
+
+@login_required
+@require_http_methods(["GET"])
+def sidebar_json(request):
+
+    # Percakapan yang sedang dibuka (jika ada)
+    active = request.GET.get("active", "")
+
+    active_conversation_id = (
+        int(active) if active.isdecimal() else None
+    )
+
+    # Gunakan helper yang sudah ada
+    sidebar_context = build_chat_sidebar_context(
+        request,
+        active_conversation_id=active_conversation_id,
+    )
+
+    # Render sidebar menggunakan template yang sama
+    sidebar_html = render_to_string(
+        "chat/_sidebar.html",
+        sidebar_context,
+        request=request,
+    )
+
+    return JsonResponse({
+        "html": sidebar_html,
+        "all_count": sidebar_context["chat_all_count"],
+        "unread_count": sidebar_context["chat_unread_count"],
+    })
+

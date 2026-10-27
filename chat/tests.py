@@ -760,3 +760,384 @@ class DeleteMessageTests(TestCase):
 
         self.assertFalse(message.deleted_for_everyone)
 
+
+# ============================================
+# TEST JSON DAN AJAX CHAT
+# ============================================
+
+class ChatJsonAjaxTests(TestCase):
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            username="ajax_sender_test",
+            password="password123",
+        )
+
+        self.receiver = User.objects.create_user(
+            username="ajax_receiver_test",
+            password="password123",
+        )
+
+        self.outsider = User.objects.create_user(
+            username="ajax_outsider_test",
+            password="password123",
+        )
+
+        self.conversation = Conversation.objects.create(
+            participant_1=self.sender,
+            participant_2=self.receiver,
+            item=None,
+        )
+
+        self.json_url = reverse(
+            "chat:conversation_messages_json",
+            args=[self.conversation.pk],
+        )
+
+        self.detail_url = reverse(
+            "chat:conversation_detail",
+            args=[self.conversation.pk],
+        )
+
+    def create_message(self, text="Halo dari sender"):
+        return Message.objects.create(
+            conversation=self.conversation,
+            sender=self.sender,
+            text=text,
+        )
+
+    # TEST 1: JSON menampilkan riwayat pesan
+    def test_json_returns_messages(self):
+        message = self.create_message()
+
+        self.client.force_login(self.receiver)
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        self.assertEqual(
+            data["conversation_id"],
+            self.conversation.pk,
+        )
+
+        self.assertEqual(len(data["messages"]), 1)
+        self.assertEqual(data["messages"][0]["id"], message.pk)
+        self.assertEqual(
+            data["messages"][0]["text"],
+            "Halo dari sender",
+        )
+
+        self.assertFalse(data["messages"][0]["is_mine"])
+
+    # TEST 2: Pengirim dikenali sebagai pemilik pesan
+    def test_json_marks_own_messages(self):
+        self.create_message()
+
+        self.client.force_login(self.sender)
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            response.json()["messages"][0]["is_mine"]
+        )
+
+    # TEST 3: Orang lain tidak boleh membaca JSON
+    def test_outsider_cannot_access_json(self):
+        self.create_message()
+
+        self.client.force_login(self.outsider)
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    # TEST 4: JSON memerlukan login
+    def test_json_requires_login(self):
+        self.create_message()
+
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 302)
+
+    # TEST 5: Pesan yang dihapus untuk saya
+    # tidak muncul dalam JSON akun tersebut
+    def test_json_excludes_hidden_messages(self):
+        message = self.create_message()
+        message.hidden_for.add(self.receiver)
+
+        self.client.force_login(self.receiver)
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["messages"],
+            [],
+        )
+
+        # Pengirim masih boleh melihat pesan
+        self.client.force_login(self.sender)
+        sender_response = self.client.get(self.json_url)
+
+        self.assertEqual(
+            len(sender_response.json()["messages"]),
+            1,
+        )
+
+    # TEST 6: Pesan yang dihapus untuk semua
+    # tidak membocorkan isi aslinya
+    def test_json_deleted_message_has_no_text(self):
+        message = self.create_message("Pesan rahasia")
+        message.text = ""
+        message.deleted_for_everyone = True
+        message.save()
+
+        self.client.force_login(self.receiver)
+        response = self.client.get(self.json_url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()["messages"][0]
+
+        self.assertTrue(data["deleted_for_everyone"])
+        self.assertEqual(data["text"], "")
+
+    # TEST 7: AJAX berhasil mengirim pesan
+    def test_ajax_send_message_success(self):
+        self.client.force_login(self.sender)
+
+        response = self.client.post(
+            self.detail_url,
+            {"text": "Pesan lewat AJAX"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_ACCEPT="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        data = response.json()
+
+        self.assertTrue(data["success"])
+        self.assertEqual(
+            data["message"]["text"],
+            "Pesan lewat AJAX",
+        )
+
+        self.assertTrue(data["message"]["is_mine"])
+
+        self.assertEqual(Message.objects.count(), 1)
+
+    # TEST 8: AJAX menolak pesan kosong
+    def test_ajax_rejects_empty_message(self):
+        self.client.force_login(self.sender)
+
+        response = self.client.post(
+            self.detail_url,
+            {"text": "   "},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            HTTP_ACCEPT="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        data = response.json()
+
+        self.assertFalse(data["success"])
+        self.assertIn("errors", data)
+
+        self.assertEqual(Message.objects.count(), 0)
+
+
+# ============================================
+# TEST AJAX SIDEBAR: INBOX, ALL, UNREAD
+# ============================================
+
+class ChatSidebarAjaxTests(TestCase):
+
+    def setUp(self):
+        self.user_a = User.objects.create_user(
+            username="sidebar_fatma",
+            password="password123",
+        )
+
+        self.user_b = User.objects.create_user(
+            username="sidebar_budi",
+            password="password123",
+        )
+
+        self.outsider = User.objects.create_user(
+            username="sidebar_lain",
+            password="password123",
+        )
+
+        self.conversation = Conversation.objects.create(
+            participant_1=self.user_a,
+            participant_2=self.user_b,
+            item=None,
+        )
+
+        self.sidebar_url = reverse(
+            "chat:sidebar_json"
+        )
+
+        self.messages_url = reverse(
+            "chat:conversation_messages_json",
+            args=[self.conversation.pk],
+        )
+
+    def create_message(self, text="Halo"):
+        return Message.objects.create(
+            conversation=self.conversation,
+            sender=self.user_b,
+            text=text,
+        )
+
+    # TEST 1: Endpoint sidebar memerlukan login
+    def test_sidebar_requires_login(self):
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(response.status_code, 302)
+
+    # TEST 2: Sidebar mengembalikan JSON
+    def test_sidebar_returns_json(self):
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        self.assertIn("html", data)
+        self.assertIn("all_count", data)
+        self.assertIn("unread_count", data)
+
+        self.assertIn(
+            "sidebar_budi",
+            data["html"],
+        )
+
+    # TEST 3: All menghitung semua percakapan
+    def test_sidebar_all_count(self):
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            response.json()["all_count"],
+            1,
+        )
+
+        # Buat percakapan tambahan
+        Conversation.objects.create(
+            participant_1=self.user_a,
+            participant_2=self.outsider,
+            item=None,
+        )
+
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            response.json()["all_count"],
+            2,
+        )
+
+    # TEST 4: Unread bertambah saat pesan baru masuk
+    def test_sidebar_unread_count(self):
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            response.json()["unread_count"],
+            0,
+        )
+
+        self.create_message("Pesan baru")
+
+        response = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            response.json()["unread_count"],
+            1,
+        )
+
+        self.assertIn(
+            "pjchat-thread-badge",
+            response.json()["html"],
+        )
+
+    # TEST 5: Unread menghitung percakapan,
+    # bukan jumlah pesan
+    def test_unread_counts_conversations(self):
+        self.create_message("Pesan pertama")
+        self.create_message("Pesan kedua")
+
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(self.sidebar_url)
+        data = response.json()
+
+        self.assertEqual(data["unread_count"], 1)
+
+        # Tetapi badge percakapan menunjukkan
+        # dua pesan belum dibaca.
+        self.assertIn(
+            "pjchat-thread-badge",
+            data["html"],
+        )
+
+    # TEST 6: Filter Unread hanya menampilkan
+    # percakapan yang belum dibaca
+    def test_sidebar_unread_filter(self):
+        self.create_message()
+
+        Conversation.objects.create(
+            participant_1=self.user_a,
+            participant_2=self.outsider,
+            item=None,
+        )
+
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(
+            self.sidebar_url,
+            {"filter": "unread"},
+        )
+
+        data = response.json()
+
+        self.assertEqual(data["all_count"], 2)
+        self.assertEqual(data["unread_count"], 1)
+
+        self.assertIn("sidebar_budi", data["html"])
+        self.assertNotIn("sidebar_lain", data["html"])
+
+    # TEST 7: Membuka pesan melalui AJAX
+    # membuat angka Unread kembali nol
+    def test_json_read_updates_unread(self):
+        message = self.create_message()
+
+        self.client.force_login(self.user_a)
+
+        before = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            before.json()["unread_count"],
+            1,
+        )
+
+        # Simulasikan polling pesan saat chat terbuka
+        response = self.client.get(self.messages_url)
+
+        self.assertEqual(response.status_code, 200)
+
+        message.refresh_from_db()
+        self.assertTrue(message.is_read)
+
+        after = self.client.get(self.sidebar_url)
+
+        self.assertEqual(
+            after.json()["unread_count"],
+            0,
+        )
