@@ -43,6 +43,9 @@
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                                 <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn action-primary">Unggah Bukti</a>
 
+                            {% elif transaksi.status == 'menunggu_pengambilan' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Detail Serah Terima COD</a>
+
                             {% elif transaksi.status == 'ditolak' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                                 <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>

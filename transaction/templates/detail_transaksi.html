@@ -122,6 +122,8 @@
                             <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn transaksi-action action-primary">
                                 Unggah Bukti
                             </a>
+                        {% elif transaksi.status == 'menunggu_pengambilan' %}
+                            <p class="transaction-info">Pembayaran COD dilakukan saat serah terima barang.</p>
                         {% elif transaksi.status == "menunggu_konfirmasi" %}
                             <a class="btn edit-bukti" href="{% url 'transaction:edit_bukti' transaksi.id %}">
                                 Edit Bukti
@@ -148,6 +150,15 @@
                                 <button type="submit" name="aksi" value="terima"
                                     class="btn transaksi-action action-primary">
                                 Terima Permintaan
+                                </button>
+                            </form>
+
+                        {% elif transaksi.status == 'menunggu_pengambilan' %}
+                            <p class="transaction-info">Konfirmasikan setelah barang diserahkan dan pembayaran COD diterima.</p>
+                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi">
+                                {% csrf_token %}
+                                <button type="submit" name="aksi" value="konfirmasi_pengambilan" class="btn transaksi-action action-primary">
+                                    Konfirmasi Pengambilan & Pembayaran COD
                                 </button>
                             </form>
 
