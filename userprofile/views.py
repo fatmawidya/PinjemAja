@@ -2,6 +2,7 @@ import json
 from django.http import HttpResponse
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
+            messages.success(request, 'Akun berhasil dibuat. Selamat datang!')
             return redirect('userprofile:my_profile')
     else:
         form = RegisterForm()
@@ -26,6 +28,7 @@ def register_htmx(request):
     if form.is_valid():
         user = form.save()
         login(request, user)
+        messages.success(request, 'Akun berhasil dibuat. Selamat datang!')
         response = HttpResponse(status=204)
         response['HX-Redirect'] = reverse('userprofile:my_profile')
         return response
@@ -42,6 +45,7 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, 'Berhasil masuk.')
             return redirect('landing_page')
     else:
         form = AuthenticationForm()
@@ -53,6 +57,7 @@ def login_htmx(request):
     if form.is_valid():
         user = form.get_user()
         login(request, user)
+        messages.success(request, 'Berhasil masuk.')
         response = HttpResponse(status=204)
         response['HX-Redirect'] = reverse('landing_page')
         return response
@@ -85,6 +90,7 @@ def edit_profile(request):
             profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
             profile.street_address = request.POST.get('street_address', '').strip()
             profile.save()
+            messages.success(request, 'Profil berhasil disimpan.')
             return redirect('userprofile:my_profile')
     else:
         form = ProfileForm(instance=profile)
@@ -113,6 +119,7 @@ def edit_profile_htmx(request):
         ).strip()
 
         profile.save()
+        messages.success(request, 'Profil berhasil disimpan.')
 
         response = HttpResponse(status=204)
         response['HX-Redirect'] = reverse(
