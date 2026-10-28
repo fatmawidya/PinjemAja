@@ -83,7 +83,7 @@
 
             <!-- KANAN: kartu status + aksi -->
             <aside class="status-card">
-                <!-- PERUBAHAN: Pakai display_status -->
+
                 <div class="status-card-header{% if item.display_status == 'dipinjam' or item.display_status == 'pending' %} is-pending{% elif item.display_status == 'tidak_tersedia' %} is-off{% endif %}">
                     {% if item.display_status == 'tersedia' %}
                         Tersedia
@@ -100,7 +100,8 @@
                     {% if is_owner %}
                         <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-primary is-block">Edit Barang</a>
                         <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger is-block">Hapus Barang</a>
-                    {% elif user.is_authenticated %}
+                    
+                        {% elif user.is_authenticated %}
                         
                         <!-- Logika Tombol berdasarkan active_transaksi -->
                         {% if active_transaksi %}

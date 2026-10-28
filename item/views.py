@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import NoReverseMatch, reverse
 from django.views.decorators.http import require_POST
+from django.urls import reverse, NoReverseMatch  # WAJIB DIIMPORT UNTUK CHAT
 from transaction.models import Transaksi
 
 from .forms import ItemForm
@@ -12,13 +12,12 @@ from .models import Item, ItemImage
 
 
 def _chat_url(item):
-    if not 'chat:start_conversation':
-        return None
+    """Mengembalikan URL chat jika app chat sudah didaftarkan, None jika belum."""
     try:
         return reverse('chat:start_conversation', args=[item.pk])
     except NoReverseMatch:
         return None
-
+    
 
 
 def _save_images(item, files, start_order=0):
@@ -73,7 +72,7 @@ def item_detail(request, pk):
         'item': item,
         'is_owner': is_owner,
         'active_transaksi': active_transaksi,
-        'chat_url': _chat_url(item),
+        'chat_url': _chat_url(item),  # INI DIA YANG HILANG SEBELUMNYA!
     })
 
 
@@ -89,6 +88,11 @@ def item_create(request):
             _save_images(item, form.cleaned_data['images'])
             messages.success(request, 'Barang berhasil ditambahkan.')
             return redirect('item:item_detail', pk=item.pk)
+        else:
+            # DEBUGGING
+            print("\n!!! GAGAL SIMPAN BARANG BARU !!!")
+            print("ERROR:", form.errors)
+            print("==================================\n")
     else:
         form = ItemForm()
     return render(request, 'item_form.html', {'form': form, 'mode': 'create'})
@@ -111,6 +115,11 @@ def item_update(request, pk):
                          start_order=0 if last is None else last + 1)
             messages.success(request, 'Barang berhasil diperbarui.')
             return redirect('item:item_detail', pk=item.pk)
+        else:
+            # DEBUGGING
+            print("\n!!! GAGAL EDIT BARANG !!!")
+            print("ERROR:", form.errors)
+            print("===========================\n")
     else:
         form = ItemForm(instance=item)
     return render(request, 'item_form.html', {

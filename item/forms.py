@@ -14,7 +14,7 @@ class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
 
-# File yang selain gambar (misal .exe / .html yang diganti nama jadi .jpg) ditolak.
+
 class MultipleImageField(forms.ImageField):
 
     def __init__(self, *args, **kwargs):
@@ -66,13 +66,14 @@ class ItemForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.price is not None:
+        # PERBAIKAN: Cek instance agar tidak error saat tambah barang baru
+        if self.instance and self.instance.pk and self.instance.price is not None:
             self.initial['price'] = int(self.instance.price)
 
     def clean_price(self):
         price = Decimal(self.cleaned_data['price'])
         if price <= 0:
-            raise forms.ValidationError('Harga harus lebih dari 0.')
+           raise forms.ValidationError('Harga harus lebih dari 0.')
         if price > MAX_PRICE:
             raise forms.ValidationError('Harga terlalu besar (maksimal 99.999.999).')
         return price
