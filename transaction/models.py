@@ -7,6 +7,7 @@ import uuid
 class Transaksi(models.Model):
     STATUS = [ ('menunggu_verifikasi', 'Menunggu Verifikasi'),
         ('menunggu_pembayaran', 'Menunggu Pembayaran'),
+        ('menunggu_pengambilan', 'Menunggu Pengambilan / Pembayaran COD'),
         ('menunggu_konfirmasi', 'Menunggu Konfirmasi'),
         ('ditolak', 'Ditolak'),
         ('disetujui', 'Sedang Berlangsung'),
@@ -16,6 +17,7 @@ class Transaksi(models.Model):
 
     STATUS_HARGA_TERKUNCI = [
     'menunggu_konfirmasi',
+    'menunggu_pengambilan',
     'ditolak',
     'disetujui',
     'selesai',
