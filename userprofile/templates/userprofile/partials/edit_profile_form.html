@@ -89,6 +89,26 @@
         {% endif %}
     </div>
 
+    <!-- Provider pembayaran -->
+     <div class="mb-3">
+        <label for="{{ form.payment_provider.id_for_label }}" class="form-label">Metode Pencairan (Bank / E-Wallet)</label>
+        {{ form.payment_provider }}
+    </div>
+
+    <div id="payment-details" style="display: none;">
+        <div class="mb-3">
+            <label id="payment-number-label" for="{{ form.payment_number.id_for_label }}" class="form-label">Nomor</label>
+            {{ form.payment_number }}
+            {% if form.payment_number.errors %}
+                <div class="form-error">{{ form.payment_number.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.payment_holder.id_for_label }}" class="form-label">Nama Pemilik</label>
+            {{ form.payment_holder }}
+        </div>
+    </div>
+    
     <!-- Provinsi -->
     <div class="mb-3">
         <label for="province-select" class="form-label">Provinsi</label>
