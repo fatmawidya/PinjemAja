@@ -329,7 +329,7 @@
             deleteButton.addEventListener("click", () => {
                 deleteForm.action = buildUrl(deleteUrlTemplate, data.id);
                 deleteEveryone.hidden =
-                    !data.is_mine || data.deleted_for_everyone;
+                    !data.is_mine || bubble.classList.contains("pjchat-bubble--deleted");
                 details.open = false;
                 deleteDialog.showModal();
             });
@@ -733,5 +733,366 @@
         );
     } else {
         initSidebarPolling();
+    }
+})();
+
+
+/* ==========================================
+   AJAX: EDIT DAN HAPUS PESAN TANPA RELOAD
+   ========================================== */
+
+(() => {
+    function initAjaxEditDelete() {
+        const messagesArea = document.getElementById("pjchat-messages");
+        const editForm = document.getElementById("pjchat-edit-form");
+        const deleteForm = document.getElementById("pjchat-delete-form");
+        const editDialog = document.getElementById("pjchat-edit-dialog");
+        const deleteDialog = document.getElementById("pjchat-delete-dialog");
+        const editError = document.getElementById("pjchat-edit-error");
+
+        if (
+            !messagesArea ||
+            !editForm ||
+            !deleteForm ||
+            !editDialog ||
+            !deleteDialog ||
+            !editError
+        ) {
+            return;
+        }
+
+        let editing = false;
+        let deleting = false;
+
+        // Cari bubble berdasarkan ID pesan
+        function findMessage(messageId) {
+            return Array.from(
+                messagesArea.querySelectorAll(
+                    ".pjchat-message[data-message-id]"
+                )
+            ).find(element =>
+                element.dataset.messageId === String(messageId)
+            );
+        }
+
+        // Ambil pesan error dari respons Django
+        function getErrorMessage(data, fallback) {
+            if (data?.errors) {
+                const errors = Object.values(data.errors)
+                    .flat()
+                    .map(error => error.message)
+                    .filter(Boolean);
+
+                if (errors.length) {
+                    return errors.join(" ");
+                }
+            }
+
+            return data?.error || fallback;
+        }
+
+        // Kirim form menggunakan AJAX
+        async function submitJson(form, formData) {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                }
+            });
+
+            const contentType =
+                response.headers.get("content-type") || "";
+
+            if (!contentType.includes("application/json")) {
+                throw new Error(
+                    "Server tidak mengembalikan JSON. Periksa sesi login."
+                );
+            }
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    getErrorMessage(data, "Operasi pesan gagal.")
+                );
+            }
+
+            return data;
+        }
+
+        // Beri tahu polling supaya mengambil pesan terbaru
+        function refreshChat() {
+            window.dispatchEvent(
+                new Event("pjchat:refresh")
+            );
+        }
+
+        // ===================================
+        // AJAX EDIT PESAN
+        // ===================================
+
+        editForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            if (editing) return;
+
+            const input = editForm.querySelector(
+                'textarea[name="text"]'
+            );
+
+            if (!input || !input.value.trim()) {
+                editError.textContent =
+                    "Pesan tidak boleh kosong.";
+
+                input?.focus();
+                return;
+            }
+
+            editing = true;
+
+            const submitButton = editForm.querySelector(
+                'button[type="submit"]'
+            );
+
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            editError.textContent = "";
+
+            try {
+                // FormData sudah menyertakan CSRF token
+                const result = await submitJson(
+                    editForm,
+                    new FormData(editForm)
+                );
+
+                // Cari pesan yang baru diedit
+                const message = findMessage(result.message.id);
+
+                const textElement = message?.querySelector(
+                    ".pjchat-message-text"
+                );
+
+                // Langsung ubah teks tanpa reload halaman
+                if (textElement) {
+                    textElement.textContent = result.message.text;
+                }
+
+                // Tutup popup Edit
+                editDialog.close();
+
+                // Sinkronkan dengan database
+                refreshChat();
+
+            } catch (error) {
+                editError.textContent =
+                    error.message || "Gagal mengedit pesan.";
+
+            } finally {
+                editing = false;
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        });
+
+        // ===================================
+        // AJAX HAPUS PESAN
+        // ===================================
+
+        deleteForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            if (deleting) return;
+
+            // Tombol yang ditekan:
+            // "me" atau "everyone"
+            const submitter = event.submitter;
+            const scope = submitter?.value;
+
+            if (scope !== "me" && scope !== "everyone") {
+                return;
+            }
+
+            const formData = new FormData(deleteForm);
+            formData.set("scope", scope);
+
+            deleting = true;
+
+            const buttons = deleteForm.querySelectorAll(
+                'button[type="submit"]'
+            );
+
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+
+            try {
+                const result = await submitJson(
+                    deleteForm,
+                    formData
+                );
+
+                const message = findMessage(result.message_id);
+
+                // ============================
+                // HAPUS UNTUK SAYA
+                // ============================
+
+                if (result.scope === "me") {
+                    // Hilangkan bubble hanya dari layar kita
+                    message?.remove();
+
+                    // Jika tidak ada pesan tersisa
+                    if (
+                        !messagesArea.querySelector(".pjchat-message")
+                    ) {
+                        const emptyNotice =
+                            document.createElement("div");
+
+                        emptyNotice.className =
+                            "pjchat-no-messages";
+
+                        emptyNotice.textContent =
+                            "Belum ada pesan. Mulai percakapan di bawah.";
+
+                        messagesArea.appendChild(emptyNotice);
+                    }
+                }
+
+                // ============================
+                // HAPUS UNTUK SEMUA ORANG
+                // ============================
+
+                else if (
+                    result.scope === "everyone" &&
+                    message
+                ) {
+                    const bubble = message.querySelector(
+                        ".pjchat-bubble"
+                    );
+
+                    const textElement = bubble?.querySelector(
+                        ".pjchat-message-text"
+                    );
+
+                    if (bubble && textElement) {
+                        bubble.classList.add(
+                            "pjchat-bubble--deleted"
+                        );
+
+                        // Ganti isi bubble dengan keterangan
+                        const deletedText =
+                            document.createElement("div");
+
+                        deletedText.className =
+                            "pjchat-deleted-text";
+
+                        const symbol =
+                            document.createElement("span");
+
+                        symbol.setAttribute(
+                            "aria-hidden",
+                            "true"
+                        );
+
+                        symbol.textContent = "⊘";
+
+                        const label =
+                            document.createElement("span");
+
+                        label.textContent =
+                            "Kamu menghapus pesan ini";
+
+                        deletedText.append(symbol, label);
+
+                        textElement.replaceWith(deletedText);
+                    }
+
+                    // Hilangkan opsi Edit
+                    message.querySelector(
+                        ".js-pjchat-edit"
+                    )?.remove();
+
+                    // Pesan tidak boleh dihapus
+                    // untuk semua orang berulang kali
+                    const deleteButton = message.querySelector(
+                        ".js-pjchat-delete"
+                    );
+
+                    if (deleteButton) {
+                        deleteButton.dataset.ownMessage = "false";
+                    }
+                }
+
+                // Tutup popup Hapus
+                deleteDialog.close();
+
+                // Perbarui data Chat
+                refreshChat();
+
+            } catch (error) {
+                // Tampilkan error di popup Hapus
+                let errorElement = deleteForm.querySelector(
+                    ".pjchat-delete-error"
+                );
+
+                if (!errorElement) {
+                    errorElement =
+                        document.createElement("p");
+
+                    errorElement.className =
+                        "pjchat-form-error pjchat-delete-error";
+
+                    errorElement.setAttribute(
+                        "role",
+                        "alert"
+                    );
+
+                    deleteForm.querySelector(
+                        ".pjchat-delete-choices"
+                    )?.insertAdjacentElement(
+                        "afterend",
+                        errorElement
+                    );
+                }
+
+                errorElement.textContent =
+                    error.message || "Gagal menghapus pesan.";
+
+            } finally {
+                deleting = false;
+
+                buttons.forEach(button => {
+                    button.disabled = false;
+                });
+            }
+        });
+
+        // Hapus pesan error lama saat popup ditutup
+        deleteDialog.addEventListener("close", () => {
+            const errorElement = deleteForm.querySelector(
+                ".pjchat-delete-error"
+            );
+
+            if (errorElement) {
+                errorElement.textContent = "";
+            }
+        });
+    }
+
+    // Jalankan setelah HTML siap
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initAjaxEditDelete
+        );
+    } else {
+        initAjaxEditDelete();
     }
 })();
