@@ -126,6 +126,8 @@ def edit_profile_htmx(request):
             'userprofile:my_profile'
         )
         return response
+    else:
+        print(form.errors)
 
     response = render(
         request,
