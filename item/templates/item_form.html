@@ -51,7 +51,7 @@
                                         <div class="d-none">{{ form.images }}</div>
                                     </label>
                                     
-                                    <!-- Teks Ketentuan Foto (JANGAN DIHAPUS) -->
+                                    <!-- Teks Ketentuan Foto -->
                                     {% if form.images.help_text %}
                                         <small class="text-muted d-block mt-3 text-center" style="font-size: 0.85rem;">
                                             {{ form.images.help_text }}
@@ -62,12 +62,20 @@
                                         <div class="text-danger mt-2 small text-center">{{ form.images.errors }}</div>
                                     {% endif %}
 
-                                    <!-- Thumbnail jika mode edit -->
+                                    <!-- Thumbnail jika mode edit (SUDAH DIPERBAIKI) -->
                                     {% if mode == 'update' and item.images.all %}
-                                    <div class="pa-thumbs mt-3 justify-content-center">
+                                    <div class="pa-thumbs mt-4" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
                                         {% for img in item.images.all %}
-                                        <div class="pa-thumb">
-                                            <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}">
+                                        <!-- Wrapper relative agar tombol X menempel di pojok -->
+                                        <div class="pa-thumb" style="position: relative; width: 84px; height: 84px;">
+                                            <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;">
+                                            
+                                            <!-- Form Hapus Gambar (Position Absolute) -->
+                                            <form method="post" action="{% url 'item:item_image_delete' item.pk img.pk %}" style="position: absolute; top: -8px; right: -8px; margin: 0; padding: 0; z-index: 10;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="pa-thumb-delete" onclick="return confirm('Yakin ingin menghapus foto ini?')" title="Hapus Foto">&times;</button>
+                                            </form>
+                                            
                                         </div>
                                         {% endfor %}
                                     </div>
