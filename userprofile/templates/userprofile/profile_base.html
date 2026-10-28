@@ -3,6 +3,7 @@
 {% block meta %}
 <link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
 <script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
+{% block sidebar_meta %}{% endblock %}
 {% endblock %}
 
 {% block content %}
@@ -18,8 +19,8 @@
             <li class="nav-item">
                 <a class="nav-link {% if active_menu == 'profil' %}active{% endif %}" href="{% url 'userprofile:my_profile' %}">Profil Saya</a>
             </li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'transaction:riwayat_meminjam' %}">Riwayat Meminjam</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'transaction:permintaan_masuk' %}">Permintaan Masuk</a></li>
+            <li class="nav-item"><a class="nav-link {% if active_menu == 'riwayat_meminjam' %}active{% endif %}" href="{% url 'transaction:riwayat_meminjam' %}">Riwayat Meminjam</a></li>
+            <li class="nav-item"><a class="nav-link {% if active_menu == 'permintaan_masuk' %}active{% endif %}" href="{% url 'transaction:permintaan_masuk' %}">Permintaan Masuk</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'item:my_items' %}">Etalase Barang</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Notifikasi</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Pengaturan</a></li>
@@ -29,8 +30,8 @@
       </div>
 
       <div class="col-md-9">
-        <div class="profile-card">
-          {% block profile_content %}{% endblock %}
+        <div class="profile-card {% block profile_card_class %}{% endblock %}">
+          {% block sidebar_content %}{% endblock %}
         </div>
       </div>
     </div>
