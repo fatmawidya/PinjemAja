@@ -1,0 +1,13 @@
+{% load static %}
+<div id="toast-component" class="toast-component toast-hidden" popover="manual" role="status" aria-live="polite">
+    <div class="toast-content">
+        <h3 id="toast-title" class="toast-title"></h3>
+        <p id="toast-message" class="toast-message"></p>
+    </div>
+</div>
+<div id="django-toast-messages" hidden>
+    {% for message in messages %}
+        <div data-message="{{ message }}" data-type="{{ message.tags }}"></div>
+    {% endfor %}
+</div>
+<script src="/static/js/toast.js"></script>
