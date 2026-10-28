@@ -34,84 +34,8 @@
                 </a>
             </nav>
 
-            <!-- <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-                {% for transaksi in transaksi_list %}
-                    <div class="col"><article class="transaksi-card h-100">
-                        {% if transaksi.barang.cover_image %}
-                            <img
-                                src="{{ transaksi.barang.cover_image.image.url }}"
-                                alt="{{ transaksi.barang.name }}"
-                                class="transaksi-image"
-                            >
-                        {% else %}
-                            <div class="transaksi-image image-placeholder">
-                                Gambar<br>Katalog
-                            </div>
-                        {% endif %}
-
-                        <div class="transaksi-body">
-                            <h2 class="barang-title">
-                                {{ transaksi.barang.name }}
-                            </h2>
-
-                            <p class="barang-peminjam">
-                                {{ transaksi.peminjam }}
-                            </p>
-
-                            <p class="tanggal-transaksi">
-                                {{ transaksi.tanggal_mulai|date:"d M Y" }}
-                                –
-                                {{ transaksi.tanggal_selesai|date:"d M Y" }}
-                            </p>
-
-                            <p class="status-text
-                                {% if transaksi.status == 'selesai' %} status-selesai
-                                {% elif transaksi.status == 'dibatalkan' or transaksi.status == 'ditolak' %} status-batal
-                                {% else %}status-menunggu{% endif %}">
-                                {{ transaksi.get_status_display }}
-                            </p>
-
-                            {% if transaksi.status == "menunggu_verifikasi" %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="">
-                                        > Lihat Detail
-                                </a>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="batal">
-                                    {% csrf_token %}
-                                    <button type="submit" name="aksi" value="batal"
-                                            class="btn transaksi-action action-danger">
-                                        Tolak
-                                    </button>
-                                </form>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="terima">
-                                    {% csrf_token %}
-                                    <button type="submit" name="aksi" value="terima"
-                                            class="btn transaksi-action action-primary">
-                                        Terima
-                                    </button>
-                                </form>
-                            tambahin css action green tuh
-                            {% elif transaksi.status == "menunggu_konfirmasi" %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-green">
-                                    Lihat Bukti
-                                </a>
-
-                            {% else %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn transaksi-action action-outline">
-                                    Lihat Detail
-                                </a>
-                            {% endif %}
-                        </div>
-                    </article></div>
-                {% empty %}
-                    <div class="col-12"><div class="request-empty">
-                        <h3>Belum ada permintaan</h3>
-                        <p>Permintaan pinjam barang kamu akan muncul di sini.</p>
-                    </div></div>
-                {% endfor %}
-            </div> -->
-
             <div id="transaksi-list">
-                {% include 'partials/transaksi_list.html' with transaksi_list=transaksi_list is_peminjam=False status_filter=status_filter %}
+                {% include 'partials/transaksi_list.html' with transaksi_list=transaksi_list status_filter=status_filter %}
             </div>
         </section>
     </div>
