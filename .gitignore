@@ -16,3 +16,7 @@ __pycache__/
 
 # Media
 media/
+
+.coverage
+htmlcov/
+.pytest_cache/
