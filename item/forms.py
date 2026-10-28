@@ -32,7 +32,7 @@ class ItemForm(forms.ModelForm):
     price = forms.CharField(
         label='Harga sewa per hari',
         widget=forms.TextInput(attrs={
-            'placeholder': 'Masukkan angka saja, tanpa titik atau koma (contoh: 50000)',
+            'placeholder': 'Masukkan angka saja (contoh: 50000)',
             'inputmode': 'numeric',
             'pattern': '[0-9]*',
             'autocomplete': 'off',

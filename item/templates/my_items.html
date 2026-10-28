@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'userprofile/profile_base.html' %}
 {% load static %}
 
 {% block meta %}
@@ -12,42 +12,46 @@
         {% include 'messages.html' %}
 
         <div class="row">
+            <!-- Sidebar Kiri (Bisa pakai profile_base.html) -->
             <div class="col-md-3 mb-4">
-                <div class="profile-sidebar">
-                <h5>{{ request.user.first_name|default:request.user.username }}</h5>
-                <p class="text-muted">@{{ request.user.username }}</p>
-                <hr>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if active_menu == 'profil' %}active{% endif %}" href="{% url 'userprofile:my_profile' %}">Profil Saya</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'transaction:riwayat_meminjam' %}">Riwayat Meminjam</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'transaction:permintaan_masuk' %}">Permintaan Masuk</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'item:my_items' %}">Etalase Barang</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Notifikasi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Pengaturan</a></li>
-                </ul>
-                <a href="{% url 'userprofile:logout' %}" class="btn btn-pinjemaja-danger w-100 mt-3">Keluar</a>
+                <div class="profile-sidebar bg-white p-4 rounded-3">
+                    <h5 class="fw-bold">{{ request.user.first_name|default:request.user.username }}</h5>
+                    <p class="text-muted">@{{ request.user.username }}</p>
+                    <hr>
+                    <ul class="nav flex-column gap-2">
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'userprofile:my_profile' %}">Profil Saya</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'transaction:riwayat_meminjam' %}">Riwayat Meminjam</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'transaction:permintaan_masuk' %}">Permintaan Masuk</a></li>
+                        <li class="nav-item"><a class="nav-link active fw-bold text-dark bg-warning rounded px-3" href="{% url 'item:my_items' %}">Etalase Barang</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="#">Notifikasi</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="#">Pengaturan</a></li>
+                    </ul>
+                    <a href="{% url 'userprofile:logout' %}" class="btn btn-danger w-100 mt-4 fw-bold rounded-pill">Keluar</a>
                 </div>
             </div>
 
-        <div class="pa-heading">
-            <h1>Etalase Barang Saya</h1>
-            <a href="{% url 'item:item_create' %}" class="btn-pa-primary">+ Tambah Barang</a>
-        </div>
+            <!-- Konten Utama Etalase -->
+            <div class="col-md-9">
+                <div class="pa-panel-large">
+                    <h1>Etalase Barang</h1>
+                    
+                    <a href="{% url 'item:item_create' %}" class="btn-add-item">Tambah Barang</a>
 
-        {% if items %}
-        <div class="catalog-grid">
-            {% for item in items %}
-                {% include 'item_card.html' with item=item show_actions=True %}
-            {% endfor %}
+                    {% if items %}
+                    <div class="catalog-grid">
+                        {% for item in items %}
+                            {% include 'item_card.html' with item=item show_actions=True %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-5">
+                        Kamu belum punya barang. <br>
+                        <a href="{% url 'item:item_create' %}" class="fw-bold text-warning">Tambah barang pertamamu</a>.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        {% else %}
-        <p class="pa-empty">
-            Kamu belum punya barang.
-            <a href="{% url 'item:item_create' %}">Tambah barang pertamamu</a>.
-        </p>
-        {% endif %}
     </div>
 </main>
 {% endblock content %}
