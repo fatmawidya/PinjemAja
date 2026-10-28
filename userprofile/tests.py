@@ -154,17 +154,18 @@ class EditProfileTest(TestCase):
         response = self.client.get(self.edit_url)
         self.assertEqual(response.status_code, 200)
 
-def test_edit_profile_updates_data(self):
-    response = self.client.post(self.edit_url, {
-        'phone_number': '08123456789',
-        'city': 'Jakarta Selatan',
-        'bio': 'Halo, saya pengguna PinjemAja',
-    })
-    self.assertEqual(response.status_code, 302)
-    self.user.profile.refresh_from_db()
-    self.assertEqual(self.user.profile.phone_number, '08123456789')
-    self.assertEqual(self.user.profile.city, 'Jakarta Selatan')
-    self.assertEqual(self.user.profile.bio, 'Halo, saya pengguna PinjemAja')
+    def test_edit_profile_updates_data(self):
+        response = self.client.post(self.edit_url, {
+            'phone_number': '08123456789',
+            'city': 'Jakarta Selatan',
+            'bio': 'Halo, saya pengguna PinjemAja',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.phone_number, '08123456789')
+        self.assertEqual(self.user.profile.city, 'Jakarta Selatan')
+        self.assertEqual(self.user.profile.bio, 'Halo, saya pengguna PinjemAja')
+        
     def test_edit_profile_only_affects_own_profile(self):
         """User A tidak boleh bisa mengubah profile User B lewat endpoint edit."""
         other_user = User.objects.create_user(username='otheruser', password='pass123')
@@ -262,15 +263,13 @@ class EditProfileHtmxViewTest(TestCase):
         response = self.client.post(self.url, {'phone_number': '0812'})
         self.assertEqual(response.status_code, 302)
 
-    def test_edit_profile_htmx_success_updates_data_and_triggers_success_toast(self):
+    def test_edit_profile_htmx_success_updates_data_and_redirects(self):
         response = self.client.post(self.url, {
             'phone_number': '08123456789',
             'bio': 'Halo dari HTMX',
         })
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('HX-Trigger', response.headers)
-        trigger_data = json.loads(response.headers['HX-Trigger'])
-        self.assertEqual(trigger_data['showToast']['type'], 'success')
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.headers['HX-Redirect'], reverse('userprofile:my_profile'))
 
         self.user.profile.refresh_from_db()
         self.assertEqual(self.user.profile.phone_number, '08123456789')

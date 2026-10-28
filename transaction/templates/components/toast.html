@@ -6,3 +6,18 @@
         </div>
     </div>
     <script src="{% static 'js/toast.js' %}"></script>
+
+{% if messages %}
+<div id="django-messages" hidden>
+    {% for message in messages %}
+    <span data-level="{{ message.level_tag }}">{{ message }}</span>
+    {% endfor %}
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#django-messages span').forEach(el => {
+        showToast('Berhasil', el.textContent, el.dataset.level);
+    });
+});
+</script>
+{% endif %}
