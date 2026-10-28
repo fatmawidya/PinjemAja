@@ -79,16 +79,16 @@ def edit_profile(request):
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             profile = form.save(commit=False)
-            profile.province = request.POST.get('province', '').strip()
-            profile.city = request.POST.get('city', '').strip()
-            profile.district = request.POST.get('district', '').strip()
-            profile.subdistrict = request.POST.get('subdistrict', '').strip()
+            profile.province = _wilayah(request, 'province', profile.province)
+            profile.city = _wilayah(request, 'city', profile.city)
+            profile.district = _wilayah(request, 'district', profile.district)
+            profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
             profile.street_address = request.POST.get('street_address', '').strip()
             profile.save()
             return redirect('userprofile:my_profile')
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'userprofile/edit_profile.html', {'form': form, 'active_menu': 'profil'})
+    return render(request, 'userprofile/edit_profile.html', {'form': form, 'profile': profile, 'active_menu': 'profil'})
 
 
 @require_POST
@@ -104,10 +104,10 @@ def edit_profile_htmx(request):
     if form.is_valid():
         profile = form.save(commit=False)
 
-        profile.province = request.POST.get('province', '').strip()
-        profile.city = request.POST.get('city', '').strip()
-        profile.district = request.POST.get('district', '').strip()
-        profile.subdistrict = request.POST.get('subdistrict', '').strip()
+        profile.province = _wilayah(request, 'province', profile.province)
+        profile.city = _wilayah(request, 'city', profile.city)
+        profile.district = _wilayah(request, 'district', profile.district)
+        profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
         profile.street_address = request.POST.get(
             'street_address', ''
         ).strip()
@@ -134,6 +134,9 @@ def edit_profile_htmx(request):
     })
     return response
 
+def _wilayah(request, key, old):
+    v = request.POST.get(key, '').strip()
+    return old if (not v or v.startswith(('Pilih', 'Memuat'))) else v
 
 @login_required
 def public_profile(request, user_id):
