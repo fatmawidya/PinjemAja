@@ -76,5 +76,3 @@ class Message(models.Model):
     )
 
     deleted_for_everyone = models.BooleanField(default=False)
-
-

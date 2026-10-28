@@ -9,12 +9,12 @@ from django.shortcuts import (
     render,
 )
 from django.views.decorators.http import require_POST
-
 from item.models import Item
 from .models import Conversation, Message
 from .forms import MessageForm
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 def build_chat_sidebar_context(request, active_conversation_id=None):
     search_query = request.GET.get("q", "").strip()
@@ -194,7 +194,7 @@ def conversation_detail(request, conversation_id):
                         "is_mine": True,
                         "is_read": message.is_read,
                         "deleted_for_everyone": False,
-                        "created_at": message.created_at.strftime("%H:%M"),
+                        "created_at": timezone.localtime(message.created_at).strftime("%H:%M"),
                     }
                 }, status=201)
 
@@ -316,7 +316,7 @@ def edit_message(request, message_id):
                         "is_mine": True,
                         "is_read": updated_message.is_read,
                         "deleted_for_everyone": False,
-                        "created_at": updated_message.created_at.strftime("%H:%M"),
+                        "created_at": timezone.localtime(updated_message.created_at).strftime("%H:%M"),
                     }
                 }, status=200)
 
@@ -488,7 +488,7 @@ def conversation_messages_json(request, conversation_id):
             "is_mine": message.sender_id == request.user.pk,
             "is_read": message.is_read,
             "deleted_for_everyone": message.deleted_for_everyone,
-            "created_at": message.created_at.strftime("%H:%M"),
+            "created_at": timezone.localtime(message.created_at).strftime("%H:%M"),
         })
 
     return JsonResponse({
@@ -530,4 +530,3 @@ def sidebar_json(request):
         "all_count": sidebar_context["chat_all_count"],
         "unread_count": sidebar_context["chat_unread_count"],
     })
-
