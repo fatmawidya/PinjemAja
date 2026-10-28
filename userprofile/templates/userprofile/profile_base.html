@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block meta %}
+<link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
+<script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3 mb-4">
+        <div class="profile-sidebar">
+          <h5>{{ request.user.first_name|default:request.user.username }}</h5>
+          <p class="text-muted">@{{ request.user.username }}</p>
+          <hr>
+          <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if active_menu == 'profil' %}active{% endif %}" href="{% url 'userprofile:my_profile' %}">Profil Saya</a>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="#">Riwayat Meminjam</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Permintaan Masuk</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Etalase Barang</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Notifikasi</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Pengaturan</a></li>
+          </ul>
+          <a href="{% url 'userprofile:logout' %}" class="btn btn-pinjemaja-danger w-100 mt-3">Keluar</a>
+        </div>
+      </div>
+
+      <div class="col-md-9">
+        <div class="profile-card">
+          {% block profile_content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.body.addEventListener('showToast', function (evt) {
+    showToast(evt.detail.title, evt.detail.message, evt.detail.type);
+});
+</script>
+{% endblock %}

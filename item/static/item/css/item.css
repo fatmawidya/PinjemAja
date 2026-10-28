@@ -184,6 +184,27 @@
 .btn-pa-danger { background: var(--danger); color: var(--white); }
 .btn-pa-danger:hover { background: #a30f0f; color: var(--white); }
 
+/*tombol status transaksi (menunggu verifikasi / konfirmasi / tidak tersedia)*/
+.btn-pa-waiting {
+    display: inline-block;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid var(--accent);
+    background: rgba(255, 186, 0, 0.15);
+    color: var(--primary);
+}
+
+/*tombol tidak bisa diklik (dipakai <span>)*/
+.is-disabled { cursor: default; pointer-events: none; }
+.btn-pa-outline.is-disabled { opacity: 0.55; }
+
+/*tombol di dalam <form> (mis. Chat Pemilik) tampil sama seperti link*/
+.status-card-body form { margin: 0; }
+.status-card-body form button { width: 100%; font-family: inherit; }
+
 /*kartu barang*/
 .catalog-card {
     display: flex;
@@ -483,6 +504,7 @@
 }
 
 .status-card-header.is-off { color: #ff9b9b; }
+.status-card-header.is-pending { background: var(--accent); color: var(--primary); }
 
 .status-card-body {
     padding: 20px;
@@ -502,3 +524,50 @@
 
 /* item_confirm_delete.html */
 .pa-panel-narrow { max-width: 520px; text-align: center; }
+
+/* TOMBOL & CHAT FULL WIDTH */
+
+/* Memaksa semua form di dalam status card menjadi selebar parent-nya */
+.status-card-body form,
+form.chat-form {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Memaksa semua elemen tombol/link/span di dalam status card menjadi full width */
+.status-card-body a,
+.status-card-body button,
+.status-card-body span,
+.status-card-body .btn-pa-primary,
+.status-card-body .btn-pa-outline,
+.status-card-body .btn-pa-waiting,
+.status-card-body .btn-pa-danger {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Tombol chat spesifik */
+.status-card-body form button.btn-pa-outline {
+    width: 100% !important;
+    display: block !important;
+}
+
+/* Memberikan jarak antar elemen agar rapi */
+.status-card-body > * + * {
+    margin-top: 12px !important;
+}
+
+/* Merapikan teks "Lihat detail transaksi" agar tidak menempel */
+.status-card-body .pa-link.text-center {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+}

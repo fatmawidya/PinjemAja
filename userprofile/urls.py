@@ -10,4 +10,8 @@ urlpatterns = [
     path('me/', views.my_profile, name='my_profile'),
     path('edit/', views.edit_profile, name='edit_profile'),
     path('<int:user_id>/', views.public_profile, name='public_profile'),
+    path('register/htmx/', views.register_htmx, name='register_htmx'),
+    path('login/htmx/', views.login_htmx, name='login_htmx'),
+    path('edit/htmx/', views.edit_profile_htmx, name='edit_profile_htmx'),
+    path('edit/avatar/delete/', views.delete_avatar, name='delete_avatar'),
 ]

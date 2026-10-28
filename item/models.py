@@ -63,6 +63,22 @@ class Item(models.Model):
     def cover_image(self):
         return self.images.first()
 
+    @property
+    def display_status(self):
+        # Import di dalam fungsi untuk menghindari circular import
+        from transaction.models import Transaksi
+        
+        # 1. Cek apakah ada transaksi yang sudah disetujui (Sedang berlangsung)
+        if Transaksi.objects.filter(barang=self, status='disetujui').exists():
+            return 'dipinjam'
+            
+        # 2. Cek apakah ada transaksi yang masih menunggu
+        if Transaksi.objects.filter(barang=self, status__in=['menunggu_verifikasi', 'menunggu_pembayaran', 'menunggu_konfirmasi']).exists():
+            return 'pending'
+            
+        # 3. Jika tidak ada, pakai status bawaan
+        return self.status
+
 
 class ItemImage(models.Model):
     # Untuk carousel di halaman detail

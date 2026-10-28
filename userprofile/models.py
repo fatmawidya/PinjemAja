@@ -7,7 +7,11 @@ from django.conf import settings
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=20, blank=True)
-    address = models.CharField(max_length=255, blank=True)
+    province = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)          # kota/kabupaten
+    district = models.CharField(max_length=100, blank=True)      # kecamatan
+    subdistrict = models.CharField(max_length=100, blank=True)   # kelurahan
+    street_address = models.TextField(blank=True)                # alamat jalan detail
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     rating = models.FloatField(default=0)
