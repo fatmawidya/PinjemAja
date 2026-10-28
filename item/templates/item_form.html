@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'userprofile/profile_base.html' %}
 {% load static %}
 
 {% block meta %}
@@ -11,63 +11,125 @@
     <div class="container">
         {% include 'messages.html' %}
 
-        <div class="pa-panel">
-            <h1>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %}</h1>
+        <div class="row">
+            <!-- Sidebar Kiri -->
+            <div class="col-md-3 mb-4">
+                <div class="profile-sidebar bg-white p-4 rounded-3 shadow-sm">
+                    <h5 class="fw-bold">{{ request.user.first_name|default:request.user.username }}</h5>
+                    <p class="text-muted">@{{ request.user.username }}</p>
+                    <hr>
+                    <ul class="nav flex-column gap-2">
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'userprofile:my_profile' %}">Profil Saya</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'transaction:riwayat_meminjam' %}">Riwayat Meminjam</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="{% url 'transaction:permintaan_masuk' %}">Permintaan Masuk</a></li>
+                        <li class="nav-item"><a class="nav-link active fw-bold text-dark bg-warning rounded px-3" href="{% url 'item:my_items' %}">Etalase Barang</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="#">Notifikasi</a></li>
+                        <li class="nav-item"><a class="nav-link text-dark" href="#">Pengaturan</a></li>
+                    </ul>
+                    <a href="{% url 'userprofile:logout' %}" class="btn btn-danger w-100 mt-4 fw-bold rounded-pill">Keluar</a>
+                </div>
+            </div>
 
-            {% if mode == 'update' and item.images.all %}
-            <section class="pa-photos">
-                <h2>Foto saat ini</h2>
-                <div class="pa-thumbs">
-                    {% for img in item.images.all %}
-                    <form method="post" action="{% url 'item:item_image_delete' item.pk img.pk %}"
-                          class="pa-thumb" onsubmit="return confirm('Hapus foto ini?');">
+            <!-- Konten Utama Form -->
+            <div class="col-md-9">
+                <div class="pa-panel-large">
+                    <h1>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %}</h1>
+
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
-                        <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}">
-                        {% if forloop.first %}<span class="pa-thumb-cover">Sampul</span>{% endif %}
-                        <button type="submit" class="pa-thumb-delete" aria-label="Hapus foto {{ forloop.counter }}">&times;</button>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="row mt-4">
+                            <!-- KIRI: Area Upload Foto -->
+                            <div class="col-md-5 mb-4 mb-md-0">
+                                <div class="upload-container">
+                                    <label for="{{ form.images.id_for_label }}" class="upload-box">
+                                        <span class="upload-text">+ Upload Foto Barang</span>
+                                        <div class="d-none">{{ form.images }}</div>
+                                    </label>
+                                    
+                                    <!-- Teks Ketentuan Foto (JANGAN DIHAPUS) -->
+                                    {% if form.images.help_text %}
+                                        <small class="text-muted d-block mt-3 text-center" style="font-size: 0.85rem;">
+                                            {{ form.images.help_text }}
+                                        </small>
+                                    {% endif %}
+                                    
+                                    {% if form.images.errors %}
+                                        <div class="text-danger mt-2 small text-center">{{ form.images.errors }}</div>
+                                    {% endif %}
+
+                                    <!-- Thumbnail jika mode edit -->
+                                    {% if mode == 'update' and item.images.all %}
+                                    <div class="pa-thumbs mt-3 justify-content-center">
+                                        {% for img in item.images.all %}
+                                        <div class="pa-thumb">
+                                            <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- KANAN: Form Input -->
+                            <div class="col-md-7">
+                                <div class="pa-field">
+                                    <label for="{{ form.name.id_for_label }}">Nama</label>
+                                    {{ form.name }}
+                                    {{ form.name.errors }}
+                                </div>
+                                
+                                <div class="pa-field">
+                                    <label for="{{ form.category.id_for_label }}">Kategori</label>
+                                    {{ form.category }}
+                                    {{ form.category.errors }}
+                                </div>
+
+                                <div class="pa-field">
+                                    <label for="{{ form.price.id_for_label }}">Harga</label>
+                                    {{ form.price }}
+                                    {{ form.price.errors }}
+                                </div>
+
+                                <div class="pa-field">
+                                    <label for="{{ form.location.id_for_label }}">Lokasi</label>
+                                    {{ form.location }}
+                                    {{ form.location.errors }}
+                                </div>
+
+                                <div class="pa-field">
+                                    <label for="{{ form.description.id_for_label }}">Deskripsi</label>
+                                    {{ form.description }}
+                                    {{ form.description.errors }}
+                                </div>
+
+                                <div class="pa-field">
+                                    <label for="{{ form.condition.id_for_label }}">Status</label>
+                                    {{ form.condition }}
+                                    {{ form.condition.errors }}
+                                </div>
+
+                                <!-- Tombol Aksi -->
+                                <div class="pa-form-actions-figma">
+                                    {% if mode == 'update' %}
+                                        <a href="{% url 'item:item_detail' item.pk %}" class="btn-pa-outline">Batal</a>
+                                    {% else %}
+                                        <a href="{% url 'item:my_items' %}" class="btn-pa-outline">Batal</a>
+                                    {% endif %}
+                                    <button type="submit" class="btn-pa-primary">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
                     </form>
-                    {% endfor %}
                 </div>
-                <small>Klik &times; untuk menghapus foto. Untuk menambah foto, pilih file baru di formulir di bawah.</small>
-            </section>
-            {% endif %}
-
-            <form method="post" enctype="multipart/form-data" class="pa-form" novalidate>
-                {% csrf_token %}
-
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-
-                {% for field in form %}
-                <div class="pa-field">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-                    {{ field.errors }}
-                </div>
-                {% endfor %}
-
-                <div class="pa-form-actions">
-                    <button type="submit" class="btn-pa-primary">Simpan Barang</button>
-                    {% if mode == 'update' %}
-                    <a href="{% url 'item:item_detail' item.pk %}" class="pa-link">Kembali</a>
-                    {% else %}
-                    <a href="{% url 'item:item_list' %}" class="pa-link">Kembali</a>
-                    {% endif %}
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </main>
 
-<script>
-    // Buat buang semua karakter selain angka saat user mengetik/paste
-    const priceInput = document.getElementById('id_price');
-    if (priceInput) {
-        priceInput.addEventListener('input', () => {
-            priceInput.value = priceInput.value.replace(/[^0-9]/g, '');
-        });
-    }
-</script>
+
 {% endblock content %}
