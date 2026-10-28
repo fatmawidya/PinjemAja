@@ -61,7 +61,6 @@
     font-weight: 600;
 }
 
-.transaction-filters .filter-btn:hover,
 .transaction-filters .filter-btn.active {
     background: var(--pa-yellow);
     border-color: var(--pa-green);
@@ -103,6 +102,29 @@
     padding-top: 10px;
 }
 
+.transaksi-card .transaksi-body > .btn,
+.transaksi-card .transaksi-body > .form-aksi .btn {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 14px;
+    line-height: 1.25;
+}
+
+.transaksi-card .transaksi-body > .form-aksi {
+    width: 100%;
+    margin: 10px 0 0;
+}
+
+.transaksi-card .transaksi-body > .btn + .form-aksi,
+.transaksi-card .transaksi-body > .btn + .btn,
+.transaksi-card .transaksi-body > .form-aksi + .form-aksi,
+.transaksi-card .transaksi-body > .form-aksi + .btn {
+    margin-top: 10px;
+}
+
 .barang-title { 
     margin: 0; 
     font-size: 1.1rem; 
@@ -131,7 +153,7 @@
     color: var(--pa-green); 
 }
 
-.status-ditolak, .status-dibatalkan, .status-batal { 
+.status-batal { 
     color: var(--pa-red); 
 }
 
@@ -165,9 +187,18 @@
     color: var(--pa-white); 
 }
 
-.action-outline { 
+.action-outline {
     border: 1px solid #888;
-    color: #666; 
+    background: transparent;
+    color: #666;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.action-outline:hover {
+    border-color: #666;
+    background: transparent;
+    color: #444;
+    transform: translateY(-1px);
 }
 
 .riwayat-empty, .request-empty { 
@@ -189,5 +220,146 @@
 .transaksi-page .transaksi-card {
     background-color: var(--pa-white);
 }
+
+.profile-transaction-page .transaction-filters .filter-btn:hover {
+    background-color: #dddddd !important;
+    color: var(--pa-green) !important;
+    box-shadow: 0 2px 6px rgba(18, 51, 41, .12);
+    transform: translateY(-1px);
+}
+
+.transaksi-card a.action-detail {
+    border: 1px solid var(--pa-green);
+    background: transparent;
+    color: var(--pa-green);
+    font-weight: 600;
+    transition: border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.transaksi-card a.action-detail:hover {
+    background: transparent;
+    border-color: currentColor;
+    color: var(--pa-green-dark);
+    transform: translateY(-1px);
+}
+
+.transaksi-card a.action-danger,
+.transaksi-card a.action-danger:hover {
+    background: transparent;
+    border-color: var(--pa-red);
+    color: var(--pa-red);
+}
+
+.transaksi-card .barang-title,
+.transaksi-card .barang-owner a,
+.transaksi-card .barang-peminjam a,
+.transaksi-card .barang-owner a:visited,
+.transaksi-card .barang-peminjam a:visited {
+    color: var(--pa-green);
+    text-decoration: none;
+}
+
+.transaksi-card .barang-owner a:hover,
+.transaksi-card .barang-peminjam a:hover {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.transaksi-card.status-ditolak .barang-title,
+.transaksi-card.status-ditolak .barang-owner a,
+.transaksi-card.status-ditolak .barang-peminjam a,
+.transaksi-card.status-ditolak .barang-owner a:visited,
+.transaksi-card.status-ditolak .barang-peminjam a:visited,
+.transaksi-card.status-ditolak .barang-owner a:hover,
+.transaksi-card.status-ditolak .barang-peminjam a:hover {
+    color: var(--pa-red);
+}
+
+.transaksi-card.status-dibatalkan .barang-title,
+.transaksi-card.status-dibatalkan .barang-owner a,
+.transaksi-card.status-dibatalkan .barang-peminjam a,
+.transaksi-card.status-dibatalkan .barang-owner a:visited,
+.transaksi-card.status-dibatalkan .barang-peminjam a:visited {
+    color: #6B7280;
+}
+
+.transaksi-card.status-dibatalkan .barang-owner a:hover,
+.transaksi-card.status-dibatalkan .barang-peminjam a:hover {
+    color: #6B7280;
+}
+
+.transaction-detail {
+    max-width: 1080px;
+}
+
+.transaction-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, .85fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.transaction-detail-image {
+    aspect-ratio: 4 / 3;
+    max-height: 420px;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.transaction-detail .transaksi-body {
+    padding-top: 0;
+    gap: .25rem;
+}
+
+.transaction-detail .barang-title {
+    color: var(--pa-green);
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+    margin-bottom: .5rem;
+}
+
+.transaction-detail .barang-owner,
+.transaction-detail .barang-peminjam,
+.transaction-detail .tanggal-transaksi,
+.transaction-detail .transaction-info {
+    line-height: 1.6;
+}
+
+.transaction-detail .status-text {
+    align-self: flex-start;
+    padding: .4rem .8rem;
+    border-radius: 999px;
+    background: #E8F1ED;
+    color: var(--pa-green);
+}
+
+.transaction-detail .status-text.status-selesai {
+    background: #E8F1ED;
+    color: var(--pa-green);
+}
+
+.transaction-detail .transaksi-body .btn,
+.transaction-detail .transaksi-body form {
+    margin-top: .5rem;
+}
+
+.transaction-detail .edit-transaksi,
+.transaction-detail .edit-bukti {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    text-decoration: none;
+}
+
+.transaction-detail .transaksi-body > a.btn {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+}
+
 
 

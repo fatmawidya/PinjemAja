@@ -102,6 +102,24 @@
     min-width: 0;
 }
 
+.profile-transaction-card {
+    padding: 0;
+    background: #F4EFE6;
+}
+
+.profile-transaction-card .profile-transaction-page {
+    min-height: 0;
+    padding: 0 !important;
+    background: transparent;
+}
+
+.profile-transaction-card .transaction-panel {
+    min-height: 0;
+    max-width: none;
+    border: 0;
+    background: #F4EFE6;
+}
+
 .profile-avatar {
     width: 120px;
     height: 120px;

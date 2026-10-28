@@ -2,7 +2,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
         {% for transaksi in transaksi_list %}
             <div class="col">
-                <article class="transaksi-card h-100">
+                <article class="transaksi-card status-{{ transaksi.status }} h-100">
                     {% if transaksi.barang.cover_image %}
                         <img src="{{ transaksi.barang.cover_image.image.url }}"
                             alt="{{ transaksi.barang.name }}" class="transaksi-image">
@@ -14,9 +14,9 @@
                         <h2 class="barang-title">{{ transaksi.barang.name }}</h2>
 
                         {% if transaksi.peminjam == request.user %}
-                            <p class="barang-owner">{{ transaksi.pemilik }}</p>
+                            <p class="barang-owner"><a href="{% url 'userprofile:public_profile' transaksi.pemilik_id %}">@{{ transaksi.pemilik.username }}</a></p>
                         {% else %}
-                            <p class="barang-peminjam">{{ transaksi.peminjam }}</p>
+                            <p class="barang-peminjam"><a href="{% url 'userprofile:public_profile' transaksi.peminjam_id %}">@{{ transaksi.peminjam.username }}</a></p>
                         {% endif %}
 
                         <p class="tanggal-transaksi">
@@ -43,11 +43,18 @@
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
                                 <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn action-primary">Unggah Bukti</a>
 
+                            {% elif transaksi.status == 'menunggu_pengambilan' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-detail">Detail Serah Terima COD</a>
+
                             {% elif transaksi.status == 'ditolak' %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
-                                <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-danger">Lihat Detail</a>
+                                <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn transaksi-action action-primary">Kirim Ulang</a>
                             {% else %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                {% if transaksi.status == 'menunggu_konfirmasi' or transaksi.status == 'selesai' %}
+                                    <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-detail">Lihat Detail</a>
+                                {% else %}
+                                    <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                {% endif %}
                             {% endif %}
 
                         {% elif transaksi.pemilik == request.user%}
@@ -71,9 +78,15 @@
                                     </button>
                                 </form>
                             {% elif transaksi.status == 'menunggu_konfirmasi' %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Bukti</a>
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-detail">Lihat Bukti</a>
+                            {% elif transaksi.status == 'ditolak' %}
+                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-danger">Lihat Detail</a>
                             {% else %}
-                                <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                {% if transaksi.status == 'disetujui' or transaksi.status == 'menunggu_pengambilan' %}
+                                    <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-detail">Lihat Detail</a>
+                                {% else %}
+                                    <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </div>
