@@ -241,4 +241,28 @@ document.addEventListener('change', function (event) {
     }
 });
 </script>
+<script>
+const EWALLETS = ['OVO', 'GoPay', 'DANA', 'ShopeePay'];
+
+function updatePaymentFields() {
+    const select = document.getElementById('id_payment_provider');
+    const box = document.getElementById('payment-details');
+    if (!select || !box) return;
+
+    const value = select.value;
+    box.style.display = value ? 'block' : 'none';
+
+    const isEwallet = EWALLETS.includes(value);
+    document.getElementById('payment-number-label').textContent =
+        (isEwallet ? 'Nomor HP ' : 'Nomor Rekening ') + value;
+    document.getElementById('id_payment_number').placeholder =
+        isEwallet ? '081234567890' : '1234567890';
+}
+
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'id_payment_provider') updatePaymentFields();
+});
+document.addEventListener('DOMContentLoaded', updatePaymentFields);
+document.body.addEventListener('htmx:afterSwap', updatePaymentFields);
+</script>
 {% endblock %}
