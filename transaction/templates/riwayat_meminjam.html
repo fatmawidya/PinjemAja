@@ -1,13 +1,15 @@
-{% extends "base.html" %}
+{% extends 'userprofile/profile_base.html' %}
 {% load static %}
 
-{% block meta %}
+{% block sidebar_meta %}
     <title>Riwayat Pinjaman - PinjemAja</title>
-    <link rel="stylesheet" href="/static/css/transaction.css">
-{% endblock meta %}
+    <link rel="stylesheet" href="/static/css/transaction.css?v=2">
+{% endblock sidebar_meta %}
 
-{% block content %}
-<main class="transaksi-page py-5">
+{% block profile_card_class %}profile-transaction-card{% endblock %}
+
+{% block sidebar_content %}
+<main class="transaksi-page profile-transaction-page py-5">
     <div class="container-xl">
         <section class="transaction-panel p-3 p-md-4 p-lg-5">
         <h1 class="transaction-title text-center mb-4">Riwayat Meminjam</h1>
@@ -40,7 +42,7 @@
         </section>
     </div>
 </main>
-{% endblock %}
+{% endblock sidebar_content %}
 
 
 {% block extra_js %}

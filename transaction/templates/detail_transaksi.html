@@ -3,25 +3,26 @@
 
 {% block meta %}
     <title>Detail Transaksi - PinjemAja</title>
-    <link rel="stylesheet" href="/static/css/transaction.css">
+    <link rel="stylesheet" href="/static/css/transaction.css?v=2">
 {% endblock meta %}
 
 {% block content %}
 <main class="transaksi-page py-5">
     <div class="container-xl">
-        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+        <section class="transaction-panel transaction-detail p-3 p-md-4 p-lg-5">
             <a class="btn btn-link" href="{% if is_peminjam %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'transaction:permintaan_masuk' %}{% endif %}">
                 ← Kembali
             </a>
             <h1 class="transaction-title text-center mb-4">Detail Transaksi</h1>
+            <div class="transaction-detail-grid">
                 {% if transaksi.barang.cover_image %}
                     <img
                         src="{{ transaksi.barang.cover_image.image.url }}"
                         alt="{{ transaksi.barang.name }}"
-                        class="transaksi-image"
+                        class="transaksi-image transaction-detail-image"
                     >
                 {% else %}
-                    <div class="transaksi-image image-placeholder">
+                    <div class="transaksi-image transaction-detail-image image-placeholder">
                         Gambar<br>Katalog
                     </div>
                 {% endif %}
@@ -32,7 +33,7 @@
 
                     {% if is_peminjam %}
                         <p class="barang-owner">
-                            Pemilik: @{{ transaksi.pemilik.username }}
+                            Pemilik: <a href="{% url 'userprofile:public_profile' transaksi.pemilik_id %}">@{{ transaksi.pemilik.username }}</a>
                         </p>
                         <p class="barang-peminjam">
                             Peminjam: saya
@@ -42,7 +43,7 @@
                             Pemilik: saya
                         </p>
                         <p class="barang-peminjam">
-                            Peminjam: @{{ transaksi.peminjam.username }}
+                            Peminjam: <a href="{% url 'userprofile:public_profile' transaksi.peminjam_id %}">@{{ transaksi.peminjam.username }}</a>
                         </p>
                     {% endif %}
 
@@ -71,19 +72,23 @@
                                 {% if is_peminjam %}
                                     saya
                                 {% else %}
-                                    @{{ transaksi.peminjam.username }}
+                                    <a href="{% url 'userprofile:public_profile' transaksi.peminjam_id %}">@{{ transaksi.peminjam.username }}</a>
                                 {% endif %}
-                            {% else %}
+                            {% elif transaksi.dibatalkan_oleh == 'Pemilik' %}
                                 {% if is_peminjam %}
-                                    @{{ transaksi.pemilik.username }}
+                                    <a href="{% url 'userprofile:public_profile' transaksi.pemilik_id %}">@{{ transaksi.pemilik.username }}</a>
                                 {% else %}
                                     saya
                                 {% endif %}
+                            {% else %}
+                                {{ transaksi.dibatalkan_oleh }}
                             {% endif %}
                             {% if transaksi.dibatalkan_pada %}
                                 pada {{ transaksi.dibatalkan_pada|date:"d M Y, H:i" }}
                             {% endif %}
                         </p>
+                    {% elif transaksi.status == 'ditolak' %}
+                        <p class="status-text status-ditolak">{{ transaksi.get_status_display }}</p>
                     {% else %}
                         <p class="status-text sedang-menunggu">{{ transaksi.get_status_display }}</p>
 
@@ -107,7 +112,7 @@
 
                     {% if is_peminjam %}
                         {% if transaksi.status == 'menunggu_verifikasi'%}
-                            <a class="btn edit-transaksi" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
+                            <a class="btn edit-transaksi action-primary" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
                                 Edit Transaksi
                             </a>
                             <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
@@ -125,12 +130,12 @@
                         {% elif transaksi.status == 'menunggu_pengambilan' %}
                             <p class="transaction-info">Pembayaran COD dilakukan saat serah terima barang.</p>
                         {% elif transaksi.status == "menunggu_konfirmasi" %}
-                            <a class="btn edit-bukti" href="{% url 'transaction:edit_bukti' transaksi.id %}">
+                            <a class="btn edit-bukti action-primary" href="{% url 'transaction:edit_bukti' transaksi.id %}">
                                 Edit Bukti
                             </a>
                         {% elif transaksi.status == 'ditolak' %}
                             <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
-                            <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn action-outline">Kirim Ulang</a>
+                            <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn transaksi-action action-primary">Kirim Ulang</a>
                         {% endif %}
                         
                     {% else %}
@@ -185,6 +190,7 @@
                     {% endif %}
 
                 </div>
+            </div>
         </section>
     </div>
 </main>
