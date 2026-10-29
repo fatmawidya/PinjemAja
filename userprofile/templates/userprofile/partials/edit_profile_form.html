@@ -61,7 +61,12 @@
         </div>
     {% endif %}
 
-
+    <!-- Email -->
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" class="form-control"
+            value="{{ request.user.email }}">
+    </div>
     <!-- Nomor telepon -->
     <div class="mb-3">
         <label for="{{ form.phone_number.id_for_label }}"
