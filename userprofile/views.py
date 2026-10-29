@@ -173,3 +173,24 @@ def delete_avatar(request):
         'showToast': {'title': 'Foto Profil', 'message': message, 'type': toast_type}
     })
     return response
+
+@login_required
+@require_POST
+def hard_delete_account(request):
+    user = request.user
+    if not user.check_password(request.POST.get('password', '')):
+        response = HttpResponse(status=204)
+        response['HX-Trigger'] = json.dumps({'showToast': {
+            'title': 'Gagal', 'message': 'Password salah.', 'type': 'error'}})
+        return response
+
+    profile = Profile.objects.filter(user=user).first()
+    if profile and profile.avatar:
+        profile.avatar.delete(save=False)
+
+    logout(request)
+    user.delete()
+    messages.success(request, 'Akun dihapus permanen.')
+    response = HttpResponse(status=204)
+    response['HX-Redirect'] = reverse('landing_page')
+    return response
