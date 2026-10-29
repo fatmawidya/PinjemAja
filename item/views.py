@@ -20,6 +20,17 @@ def _chat_url(item):
     
 
 
+def _has_payment_info(user):
+    """True jika profil user sudah punya info pembayaran lengkap."""
+    profile = getattr(user, 'profile', None)
+    return bool(profile and profile.has_payment_info)
+
+
+def _owner_location(user):
+    """Lokasi (kota) milik user, dipakai untuk info di form barang."""
+    return Item(owner=user).location
+
+
 def _save_images(item, files, start_order=0):
     for offset, f in enumerate(files):
         ItemImage.objects.create(item=item, image=f, order=start_order + offset)
@@ -27,7 +38,8 @@ def _save_images(item, files, start_order=0):
 
 
 def item_list(request):
-    items = Item.objects.filter(status='tersedia').prefetch_related('images')
+    items = (Item.objects.filter(status='tersedia')
+             .select_related('owner__profile').prefetch_related('images'))
 
     categories = dict(Item.CATEGORY_CHOICES)
     category = request.GET.get('category')
@@ -45,7 +57,7 @@ def item_list(request):
 
 def item_detail(request, pk):
     item = get_object_or_404(
-        Item.objects.prefetch_related('images'), pk=pk
+        Item.objects.select_related('owner__profile').prefetch_related('images'), pk=pk
     )
     is_owner = request.user == item.owner
     active_transaksi = None
@@ -59,6 +71,7 @@ def item_detail(request, pk):
                 status__in=[
                     'menunggu_verifikasi',
                     'menunggu_pembayaran',
+                    'menunggu_pengambilan',
                     'menunggu_konfirmasi',
                     'disetujui', 
                     'ditolak',    
@@ -79,6 +92,15 @@ def item_detail(request, pk):
 
 @login_required
 def item_create(request):
+    # Aturan bisnis: pemilik wajib punya info pembayaran sebelum menambah barang.
+    if not _has_payment_info(request.user):
+        messages.warning(
+            request,
+            'Lengkapi info pembayaran (bank/e-wallet) di profilmu dulu '
+            'sebelum menambah barang.',
+        )
+        return redirect('userprofile:edit_profile')
+
     if request.method == 'POST':
         form = ItemForm(request.POST, request.FILES)
         if form.is_valid():
@@ -95,7 +117,10 @@ def item_create(request):
             print("==================================\n")
     else:
         form = ItemForm()
-    return render(request, 'item_form.html', {'form': form, 'mode': 'create'})
+    return render(request, 'item_form.html', {
+        'form': form, 'mode': 'create',
+        'owner_location': _owner_location(request.user),
+    })
 
 
 
@@ -124,6 +149,7 @@ def item_update(request, pk):
         form = ItemForm(instance=item)
     return render(request, 'item_form.html', {
         'form': form, 'mode': 'update', 'item': item,
+        'owner_location': _owner_location(request.user),
     })
 
 
@@ -159,5 +185,6 @@ def item_delete(request, pk):
 
 @login_required
 def my_items(request):
-    items = Item.objects.filter(owner=request.user).prefetch_related('images')
+    items = (Item.objects.filter(owner=request.user)
+             .select_related('owner__profile').prefetch_related('images'))
     return render(request, 'my_items.html', {'items': items})

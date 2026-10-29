@@ -51,14 +51,13 @@ class ItemForm(forms.ModelForm):
 
     class Meta:
         model = Item
-        fields = ['name', 'description', 'category', 'price', 'condition', 'location']
+        fields = ['name', 'description', 'category', 'price', 'condition']
         labels = {
             'name': 'Nama barang',
             'description': 'Deskripsi',
             'category': 'Kategori',
             'price': 'Harga sewa per hari',
             'condition': 'Kondisi',
-            'location': 'Dikirim dari kota',
         }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),

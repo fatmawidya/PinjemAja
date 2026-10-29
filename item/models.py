@@ -42,7 +42,6 @@ class Item(models.Model):
     )
     price = models.DecimalField(max_digits=10, decimal_places=2)  # harga sewa per hari
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='baik')
-    location = models.CharField(max_length=255)  # teks bebas, misal nama kota
     latitude = models.FloatField(null=True, blank=True)   # dipakai modul peta
     longitude = models.FloatField(null=True, blank=True)  # dipakai modul peta
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='tersedia')
@@ -54,6 +53,13 @@ class Item(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.owner})"
+
+    @property
+    def location(self):
+        """Lokasi barang = kota pemilik, diambil dari modul userprofile."""
+        profile = getattr(self.owner, 'profile', None)
+        city = (profile.city if profile else '').strip()
+        return city.title() if city else 'Lokasi belum diatur'
 
     @property
     def is_available(self):
@@ -73,7 +79,7 @@ class Item(models.Model):
             return 'dipinjam'
             
         # 2. Cek apakah ada transaksi yang masih menunggu
-        if Transaksi.objects.filter(barang=self, status__in=['menunggu_verifikasi', 'menunggu_pembayaran', 'menunggu_konfirmasi']).exists():
+        if Transaksi.objects.filter(barang=self, status__in=['menunggu_verifikasi', 'menunggu_pembayaran', 'menunggu_pengambilan', 'menunggu_konfirmasi']).exists():
             return 'pending'
             
         # 3. Jika tidak ada, pakai status bawaan
