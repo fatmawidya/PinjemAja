@@ -16,22 +16,26 @@ class SearchModuleTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='testceline', password='password123')
+        self.user.profile.city = 'Bandung'
+        self.user.profile.save()
+        # Lokasi barang diambil dari profil pemilik, jadi pemilik kedua dibuat di kota lain
+        self.user2 = User.objects.create_user(username='testceline2', password='password123')
+        self.user2.profile.city = 'Jakarta Selatan'
+        self.user2.profile.save()
         self.item1 = Item.objects.create(
             name='Tenda Dome Eiger',
             description='Tenda camping tahan hujan kapasitas 4 orang',
             category='camping',
             owner=self.user,
             price=50000,
-            location='Bandung',
             status='tersedia'
         )
         self.item2 = Item.objects.create(
             name='Kamera Sony A7III',
             description='Kamera mirrorless fotografi profesional',
             category='fotografi',
-            owner=self.user,
+            owner=self.user2,
             price=200000,
-            location='Jakarta Selatan',
             status='tersedia'
         )
 
@@ -106,8 +110,6 @@ class SearchModuleTests(TestCase):
 
     def test_filter_by_user_profile_city(self):
         """Memastikan filter lokasi terdekat membaca kota dari profil user."""
-        self.user.profile.city = 'Bandung'
-        self.user.profile.save()
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('search:search_api'), {'nearby': '1'})
