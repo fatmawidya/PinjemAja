@@ -558,3 +558,18 @@ footer { flex-shrink: 0; }
     .pa-form-actions-figma .btn-pa-outline,
     .pa-form-actions-figma .btn-pa-primary { width: 100%; }
 }
+
+/* Preview foto baru & info lokasi read-only di form barang */
+.pa-thumbs-center { justify-content: center; }
+.pa-preview-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+    text-align: center;
+}
+.pa-readonly {
+    padding: 10px 14px;
+    background: #F6F3ED;
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+}
