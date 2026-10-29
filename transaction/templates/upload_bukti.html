@@ -3,13 +3,13 @@
 
 {% block meta %}
     <title>{% if is_update %}Update{% else %}Upload{% endif %} Bukti Pembayaran - PinjemAja</title>
-    <link rel="stylesheet" href="/static/css/transaction.css">
+    <link rel="stylesheet" href="/static/css/transaction.css?v=3">
 {% endblock meta %}
 
 {% block content %}
-<main class="transaksi-page py-5">
+<main class="transaksi-page payment-page py-5">
     <div class="container-xl">
-        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+        <section class="transaction-panel payment-panel p-3 p-md-4 p-lg-5">
             <h1 class="transaction-title text-center mb-4">Pembayaran Pinjaman</h1>
             <div class="row g-4">
                 <div class="col-12 col-md-5">
@@ -74,7 +74,7 @@
                                 {% if is_edit %}Update Bukti{% else %}Kirim Bukti{% endif %}
                             </button>
                             <a href="{% url 'transaction:detail_transaksi' transaksi.id %}"
-                                class="btn btn-secondary">
+                                class="btn action-outline">
                                 Batal
                             </a>
                         </div>
