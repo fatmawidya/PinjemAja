@@ -140,23 +140,18 @@
                         
                     {% else %}
                         {% if transaksi.status == 'menunggu_verifikasi' %}
-                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
-                                {% csrf_token %}
-                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                <button type="submit" name="aksi" value="batal"
-                                    class="btn transaksi-action action-danger">
-                                    Tolak Permintaan
-                                </button>
-                            </form>
-
-                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
-                                {% csrf_token %}
-                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                <button type="submit" name="aksi" value="terima"
-                                    class="btn transaksi-action action-primary">
-                                Terima Permintaan
-                                </button>
-                            </form>
+                            <div class="transaction-decision-actions">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="batal" class="btn transaksi-action action-danger">Tolak Permintaan</button>
+                                </form>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="terima" class="btn transaksi-action action-primary">Terima Permintaan</button>
+                                </form>
+                            </div>
 
                         {% elif transaksi.status == 'menunggu_pengambilan' %}
                             <p class="transaction-info">Konfirmasikan setelah barang diserahkan dan pembayaran COD diterima.</p>
@@ -168,6 +163,7 @@
                             </form>
 
                         {% elif transaksi.status == 'menunggu_konfirmasi' %}
+                            <div class="transaction-decision-actions">
                             <button type="button"
                                 class="btn btn-danger"
                                 popovertarget="modal-tolak-bukti"
@@ -184,6 +180,7 @@
                                 Terima Bukti Pembayaran
                                 </button>
                             </form>
+                            </div>
 
                             {% include "components/tolak_bukti.html" with transaksi=transaksi %}
                         {% endif %}

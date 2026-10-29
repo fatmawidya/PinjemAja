@@ -43,7 +43,7 @@
                                             Kirim Pengajuan
                                         {% endif %}
                                     </button>
-                                    <a href="{% if is_edit %}{% url 'transaction:riwayat_meminjam'%} {% else  %} {% url 'item:item_detail' barang.id %} {% endif %}" 
+                                    <a href="{% if is_edit %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'item:item_detail' barang.id %}{% endif %}"
                                     class="button btn-secondary flex-fill text-center">Batalkan</a>
                                 </div>
                             </div>
