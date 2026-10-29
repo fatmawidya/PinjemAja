@@ -17,7 +17,7 @@ def save_search_history(request, query):
         return
     q = query.strip()
     user = request.user if request.user.is_authenticated else None
-    
+
     # Cek pencarian terakhir agar tidak ada duplikasi berturut-turut
     last_search = SearchHistory.objects.filter(user=user).first()
     if not last_search or last_search.keyword.lower() != q.lower():
@@ -33,9 +33,9 @@ def get_filtered_items(request):
     - condition: kondisi barang (baru, baik, cukup)
     - min_price & max_price: rentang harga
     - sort: pengurutan (latest, price_asc, price_desc, name_asc)
-    - nearby: filter lokasi terdekat berdasarkan kota user di profile
     """
-    items = Item.objects.exclude(status='tidak_tersedia').prefetch_related('images')
+    items = (Item.objects.filter(status='tersedia')
+             .select_related('owner__profile').prefetch_related('images'))
 
     # 1. Pencarian Kata Kunci (Keyword Search)
     query = request.GET.get('q', '').strip() or request.GET.get('input', '').strip()
@@ -53,7 +53,7 @@ def get_filtered_items(request):
     if categories:
         items = items.filter(category__in=categories)
 
-    # 3. Filter Lokasi (Checkbox / Free Text / Profil Kota Terdekat)
+    # 3. Filter Lokasi (Checkbox / Free Text)
     locations = request.GET.getlist('location')
     if not locations and request.GET.get('location'):
         loc_str = request.GET.get('location').strip()
@@ -65,14 +65,16 @@ def get_filtered_items(request):
     # Cek jika ada request khusus 'nearby=1' memakai kota dari user profile
     if (request.GET.get('nearby') == '1' or request.GET.get('nearest') == '1') and request.user.is_authenticated:
         if hasattr(request.user, 'profile') and request.user.profile.city:
-            user_city = request.user.profile.city.strip()
-            if user_city and user_city not in locations:
-                locations.append(user_city)
+            user_city_nearby = request.user.profile.city.strip()
+            if user_city_nearby and user_city_nearby not in locations:
+                locations.append(user_city_nearby)
 
     if locations:
         loc_filter = Q()
         for loc in locations:
-            loc_filter |= Q(location__icontains=loc)
+            # Lokasi barang = lokasi pemilik (profil): cocokkan kota atau provinsi
+            loc_filter |= (Q(owner__profile__city__icontains=loc)
+                           | Q(owner__profile__province__icontains=loc))
         items = items.filter(loc_filter)
 
     # 4. Filter Kondisi Barang
@@ -118,15 +120,10 @@ def search_page(request):
     """
     items = get_filtered_items(request)
 
-    # Ambil lokasi dari profil user jika sudah diisi (integrasi modul UserProfile)
-    user_city = None
-    if request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.city:
-        user_city = request.user.profile.city.strip()
+    # Ambil daftar lokasi unik yang ada di database (dari profil pemilik)
+    db_locations = list(Item.objects.values_list('owner__profile__city', flat=True).distinct())
+    clean_locations = sorted(list({loc.strip().title() for loc in db_locations if loc and loc.strip()}))
 
-    # Ambil daftar lokasi unik yang ada di database
-    db_locations = list(Item.objects.values_list('location', flat=True).distinct())
-    clean_locations = sorted(list({loc.strip() for loc in db_locations if loc and loc.strip()}))
-    
     # Jika database masih kosong/sedikit, sertakan default kota populer
     default_locations = ['Jakarta', 'Depok', 'Bandung', 'Bogor', 'Tangerang', 'Bekasi', 'Surabaya', 'Yogyakarta']
     all_locations = sorted(list(set(clean_locations + default_locations)))
@@ -141,6 +138,10 @@ def search_page(request):
     user = request.user if request.user.is_authenticated else None
     search_histories = SearchHistory.objects.filter(user=user)[:5]
     form = SearchForm(request.GET)
+
+    user_city = None
+    if request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.city:
+        user_city = request.user.profile.city.strip()
 
     context = {
         'items': items,
@@ -161,7 +162,7 @@ def search_page(request):
 def search_api(request):
     """
     Endpoint AJAX JSON untuk menyaring barang secara real-time
-    tanpa reload halaman. Menggunakan display_status dinamis dari modul Item/Transaction.
+    tanpa reload halaman. Dipanggil oleh JavaScript di frontend.
     """
     items = get_filtered_items(request)
 
@@ -169,6 +170,10 @@ def search_api(request):
     for item in items:
         cover = item.cover_image
         image_url = cover.image.url if cover and cover.image else None
+
+        # Gunakan lokasi dari profil pemilik agar konsisten dengan filter
+        profile = getattr(item.owner, 'profile', None)
+        location_display = profile.city if profile and profile.city else (item.location or '')
 
         # Gunakan properti dinamis display_status dari Item
         display_status = item.display_status
@@ -193,11 +198,11 @@ def search_api(request):
             'category_display': item.get_category_display(),
             'price': float(item.price),
             'formatted_price': f"Rp{int(item.price):,}".replace(',', '.'),
-            'location': item.location,
+            'location': location_display,
             'condition': item.get_condition_display(),
-            'status': display_status,
-            'status_display': status_display,
-            'is_available': is_available,
+            'status': display_status,           # status dinamis
+            'status_display': status_display,   # label untuk UI
+            'is_available': is_available,       # flag untuk frontend
             'image_url': image_url,
             'detail_url': reverse('item:item_detail', kwargs={'pk': item.pk}),
         })
