@@ -600,6 +600,21 @@
         color: #166534;
     }
 
+    .item-status-pill.dipinjam {
+        background-color: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .item-status-pill.pending {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+
+    .item-status-pill.tidak_tersedia {
+        background-color: #F3F4F6;
+        color: #6B7280;
+    }
+
     .item-card-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -811,6 +826,28 @@
                         <div class="filter-group-title">
                             <span>Lokasi Kota</span>
                         </div>
+                        {% if user_city %}
+                        <div class="user-city-badge" style="margin-bottom: 10px; padding: 8px 10px; background-color: rgba(24, 65, 54, 0.08); border: 1.5px solid var(--color-brand-primary); border-radius: 8px;">
+                            <label class="filter-checkbox-label" style="margin: 0; font-weight: 600; color: var(--color-brand-primary); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input 
+                                    type="checkbox" 
+                                    name="location" 
+                                    value="{{ user_city }}" 
+                                    class="filter-checkbox user-profile-city-checkbox"
+                                    id="filter-user-city"
+                                >
+                                <span>📍 Kota Terdekat ({{ user_city }})</span>
+                            </label>
+                        </div>
+                        {% elif user.is_authenticated %}
+                        <div style="font-size: 0.72rem; color: #666; margin-bottom: 8px; background: #FFFBEB; padding: 6px 8px; border-radius: 6px; border: 1px dashed #F59E0B;">
+                            📍 Ingin filter lokasi terdekat? <a href="{% url 'userprofile:edit_profile' %}" style="color: #184136; font-weight: 600; text-decoration: underline;">Atur kota di profilmu</a>.
+                        </div>
+                        {% else %}
+                        <div style="font-size: 0.72rem; color: #666; margin-bottom: 8px; background: #FFFBEB; padding: 6px 8px; border-radius: 6px; border: 1px dashed #F59E0B;">
+                            📍 Ingin filter lokasi terdekat? <a href="{% url 'userprofile:login' %}?next={% url 'search:search_page' %}" style="color: #184136; font-weight: 600; text-decoration: underline;">Masuk akun</a>.
+                        </div>
+                        {% endif %}
                         <div class="filter-search-box">
                             <span class="filter-search-icon">📍</span>
                             <input 
@@ -933,13 +970,23 @@
                                             Rp{{ item.price|floatformat:"0g" }}<span>/hari</span>
                                         </div>
                                     </div>
-                                    <span class="item-status-pill {{ item.status }}">
-                                        {{ item.get_status_display }}
-                                    </span>
+                                    {% if item.display_status == 'tersedia' %}
+                                        <span class="item-status-pill tersedia">Tersedia</span>
+                                    {% elif item.display_status == 'dipinjam' %}
+                                        <span class="item-status-pill dipinjam">Sedang Dipinjam</span>
+                                    {% elif item.display_status == 'pending' %}
+                                        <span class="item-status-pill pending">Menunggu Konfirmasi</span>
+                                    {% else %}
+                                        <span class="item-status-pill tidak_tersedia">Tidak Tersedia</span>
+                                    {% endif %}
                                 </div>
                                 <div class="item-card-actions">
                                     <a href="{% url 'item:item_detail' item.pk %}" class="btn-card-detail">Detail</a>
-                                    <a href="{% url 'item:item_detail' item.pk %}" class="btn-card-borrow">Pinjam</a>
+                                    {% if item.display_status == 'tersedia' %}
+                                        <a href="{% url 'item:item_detail' item.pk %}" class="btn-card-borrow">Pinjam</a>
+                                    {% else %}
+                                        <a href="{% url 'item:item_detail' item.pk %}" class="btn-card-borrow btn-disabled" style="opacity: 0.6; background-color: #d1d5db; border-color: #d1d5db; color: #4b5563; cursor: not-allowed;">Sedang Dipinjam</a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -1076,6 +1123,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span>Gambar Katalog</span>
                    </div>`;
 
+            const borrowBtnHtml = item.is_available
+                ? `<a href="${item.detail_url}" class="btn-card-borrow">Pinjam</a>`
+                : `<a href="${item.detail_url}" class="btn-card-borrow btn-disabled" style="opacity: 0.6; background-color: #d1d5db; border-color: #d1d5db; color: #4b5563; cursor: not-allowed;">Sedang Dipinjam</a>`;
+
             html += `
                 <div class="custom-item-card">
                     <div class="item-card-image-box">
@@ -1100,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         <div class="item-card-actions">
                             <a href="${item.detail_url}" class="btn-card-detail">Detail</a>
-                            <a href="${item.detail_url}" class="btn-card-borrow">Pinjam</a>
+                            ${borrowBtnHtml}
                         </div>
                     </div>
                 </div>

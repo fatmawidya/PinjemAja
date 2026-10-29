@@ -33,8 +33,9 @@ def get_filtered_items(request):
     - condition: kondisi barang (baru, baik, cukup)
     - min_price & max_price: rentang harga
     - sort: pengurutan (latest, price_asc, price_desc, name_asc)
+    - nearby: filter lokasi terdekat berdasarkan kota user di profile
     """
-    items = Item.objects.filter(status='tersedia').prefetch_related('images')
+    items = Item.objects.exclude(status='tidak_tersedia').prefetch_related('images')
 
     # 1. Pencarian Kata Kunci (Keyword Search)
     query = request.GET.get('q', '').strip() or request.GET.get('input', '').strip()
@@ -52,7 +53,7 @@ def get_filtered_items(request):
     if categories:
         items = items.filter(category__in=categories)
 
-    # 3. Filter Lokasi (Checkbox / Free Text)
+    # 3. Filter Lokasi (Checkbox / Free Text / Profil Kota Terdekat)
     locations = request.GET.getlist('location')
     if not locations and request.GET.get('location'):
         loc_str = request.GET.get('location').strip()
@@ -60,6 +61,14 @@ def get_filtered_items(request):
             locations = [l.strip() for l in loc_str.split(',') if l.strip()]
         else:
             locations = [loc_str]
+
+    # Cek jika ada request khusus 'nearby=1' memakai kota dari user profile
+    if (request.GET.get('nearby') == '1' or request.GET.get('nearest') == '1') and request.user.is_authenticated:
+        if hasattr(request.user, 'profile') and request.user.profile.city:
+            user_city = request.user.profile.city.strip()
+            if user_city and user_city not in locations:
+                locations.append(user_city)
+
     if locations:
         loc_filter = Q()
         for loc in locations:
@@ -109,6 +118,11 @@ def search_page(request):
     """
     items = get_filtered_items(request)
 
+    # Ambil lokasi dari profil user jika sudah diisi (integrasi modul UserProfile)
+    user_city = None
+    if request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.city:
+        user_city = request.user.profile.city.strip()
+
     # Ambil daftar lokasi unik yang ada di database
     db_locations = list(Item.objects.values_list('location', flat=True).distinct())
     clean_locations = sorted(list({loc.strip() for loc in db_locations if loc and loc.strip()}))
@@ -131,6 +145,7 @@ def search_page(request):
     context = {
         'items': items,
         'form': form,
+        'user_city': user_city,
         'categories': Item.CATEGORY_CHOICES,
         'conditions': Item.CONDITION_CHOICES,
         'locations': all_locations,
@@ -146,7 +161,7 @@ def search_page(request):
 def search_api(request):
     """
     Endpoint AJAX JSON untuk menyaring barang secara real-time
-    tanpa reload halaman. Dipanggil oleh JavaScript di frontend.
+    tanpa reload halaman. Menggunakan display_status dinamis dari modul Item/Transaction.
     """
     items = get_filtered_items(request)
 
@@ -154,6 +169,21 @@ def search_api(request):
     for item in items:
         cover = item.cover_image
         image_url = cover.image.url if cover and cover.image else None
+
+        # Gunakan properti dinamis display_status dari Item
+        display_status = item.display_status
+        if display_status == 'tersedia':
+            status_display = 'Tersedia'
+            is_available = True
+        elif display_status == 'dipinjam':
+            status_display = 'Terpinjam'
+            is_available = False
+        elif display_status == 'pending':
+            status_display = 'Menunggu Konfirmasi'
+            is_available = False
+        else:
+            status_display = 'Tidak Tersedia'
+            is_available = False
 
         data.append({
             'id': str(item.id),
@@ -165,8 +195,9 @@ def search_api(request):
             'formatted_price': f"Rp{int(item.price):,}".replace(',', '.'),
             'location': item.location,
             'condition': item.get_condition_display(),
-            'status': item.status,
-            'status_display': item.get_status_display(),
+            'status': display_status,
+            'status_display': status_display,
+            'is_available': is_available,
             'image_url': image_url,
             'detail_url': reverse('item:item_detail', kwargs={'pk': item.pk}),
         })

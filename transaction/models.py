@@ -51,7 +51,14 @@ class Transaksi(models.Model):
     def hitung_total(self):
         if not (self.barang_id and self.tanggal_mulai and self.tanggal_selesai):
             return 0
-        durasi = (self.tanggal_selesai - self.tanggal_mulai).days + 1
+        from datetime import datetime, date
+        t_mulai = self.tanggal_mulai
+        t_selesai = self.tanggal_selesai
+        if isinstance(t_mulai, str):
+            t_mulai = datetime.strptime(t_mulai, "%Y-%m-%d").date()
+        if isinstance(t_selesai, str):
+            t_selesai = datetime.strptime(t_selesai, "%Y-%m-%d").date()
+        durasi = (t_selesai - t_mulai).days + 1
         if durasi <= 0:
             return 0
         return self.barang.price * durasi
