@@ -46,6 +46,8 @@ class Transaksi(models.Model):
     catatan_penolakan = models.TextField(blank=True)
     dibatalkan_oleh = models.CharField(max_length=20, blank=True)
     dibatalkan_pada = models.DateTimeField(null=True, blank=True)
+    rating_pemilik = models.PositiveSmallIntegerField(null=True, blank=True)
+    rating_dilewati = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def hitung_total(self):
