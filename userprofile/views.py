@@ -68,6 +68,7 @@ def login_htmx(request):
     })
     return response
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('landing_page')
