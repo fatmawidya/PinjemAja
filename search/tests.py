@@ -81,3 +81,36 @@ class SearchModuleTests(TestCase):
         res_del = self.client.post(reverse('search:delete_search_history', args=[history.pk]))
         self.assertEqual(res_del.status_code, 200)
         self.assertFalse(SearchHistory.objects.filter(keyword='tenda').exists())
+
+    def test_dynamic_item_display_status(self):
+        """Memastikan barang yang sedang dipinjam menampilkan status dinamis Terpinjam."""
+        import datetime
+        from transaction.models import Transaksi
+
+        peminjam = User.objects.create_user(username='peminjam1', password='password123')
+        Transaksi.objects.create(
+            barang=self.item1,
+            pemilik=self.user,
+            peminjam=peminjam,
+            tanggal_mulai=datetime.date.today(),
+            tanggal_selesai=datetime.date.today() + datetime.timedelta(days=2),
+            status='disetujui'
+        )
+
+        response = self.client.get(reverse('search:search_api'), {'q': 'tenda'})
+        data = response.json()
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['items'][0]['status'], 'dipinjam')
+        self.assertEqual(data['items'][0]['status_display'], 'Terpinjam')
+        self.assertFalse(data['items'][0]['is_available'])
+
+    def test_filter_by_user_profile_city(self):
+        """Memastikan filter lokasi terdekat membaca kota dari profil user."""
+        self.user.profile.city = 'Bandung'
+        self.user.profile.save()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('search:search_api'), {'nearby': '1'})
+        data = response.json()
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['items'][0]['location'], 'Bandung')
