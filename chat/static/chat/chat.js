@@ -803,6 +803,12 @@
                 }
             });
 
+            if (response.status === 403) {
+            throw new Error(
+                "Akses ditolak. Kamu tidak memiliki izin."
+            );
+        }
+
             const contentType =
                 response.headers.get("content-type") || "";
 
