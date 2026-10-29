@@ -11,6 +11,13 @@ from .decorators import rate_limit
 from .forms import RegisterForm, ProfileForm, UserEmailForm
 from .models import Profile
 
+def get_form_errors(form):
+    return "\n".join(
+        error
+        for errors in form.errors.values()
+        for error in errors
+    )
+
 def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -36,7 +43,7 @@ def register_htmx(request):
 
     response = render(request, 'userprofile/partials/register_form.html', {'form': form})
     response['HX-Trigger'] = json.dumps({
-        'showToast': {'title': 'Gagal mendaftar', 'message': 'Periksa kembali data yang kamu masukkan.', 'type': 'error'}
+        'showToast': {'title': 'Gagal mendaftar', 'message': get_form_errors(form), 'type': 'error'}
     })
     return response
 
@@ -71,7 +78,6 @@ def login_htmx(request):
     })
     return response
 
-@require_POST
 def logout_view(request):
     logout(request)
     return redirect('landing_page')
