@@ -235,32 +235,41 @@
 }
 
 /* joined */
-.profile-meta {
-    display: flex;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    width: fit-content;
+.joined-chip {
+    display: inline-block;
     max-width: 100%;
-    margin: 0 auto 0.75rem;
-    padding: 0.4rem 1rem;
     background: #2E7D5B;
     color: #FFFFFF;
     border-radius: 999px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.profile-meta {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    color: #2E7D5B;
     font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.profile-meta .meta-item {
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-meta .meta-item:first-child {
+    flex-shrink: 0;
 }
 
 .profile-meta .meta-item + .meta-item::before {
     content: "|";
     margin: 0 0.6rem;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-@media (max-width: 480px) {
-    .profile-meta {
-        font-size: 0.75rem;
-        padding: 0.35rem 0.75rem;
-    }
-    .profile-meta .meta-item + .meta-item::before {
-        margin: 0 0.4rem;
-    }
+    color: #9CB5AA;
+    font-weight: 400;
 }
