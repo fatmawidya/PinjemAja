@@ -1,8 +1,13 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+import datetime
+import io
 from decimal import Decimal
-from item.models import Item
+
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
+from item.models import Item, ItemImage
 from item.forms import ItemForm, MAX_PRICE
 from transaction.models import Transaksi
 
@@ -19,9 +24,17 @@ class SimpleItemTest(TestCase):
             description='Kamera bagus',
             category='fotografi', 
             price=Decimal('50000.00'), 
-            condition='baik', 
-            location='Depok'
+            condition='baik'
         )
+        # Aturan bisnis: pemilik harus punya info pembayaran untuk menambah barang,
+        # dan lokasi barang diambil dari profil pemilik.
+        profile = self.owner.profile
+        profile.city = 'KOTA DEPOK'
+        profile.province = 'JAWA BARAT'
+        profile.payment_provider = 'BCA'
+        profile.payment_number = '1234567890'
+        profile.payment_holder = 'Jihyo'
+        profile.save()
 
     # ==========================================
     # 1. TEST MODEL & STATUS DINAMIS
@@ -34,7 +47,8 @@ class SimpleItemTest(TestCase):
         """Cek status jadi 'pending' jika ada transaksi menunggu"""
         Transaksi.objects.create(
             barang=self.item, peminjam=self.other_user, pemilik=self.owner,
-            tanggal_mulai='2026-10-01', tanggal_selesai='2026-10-05', status='menunggu_verifikasi'
+            tanggal_mulai=datetime.date(2026, 10, 1), tanggal_selesai=datetime.date(2026, 10, 5),
+            status='menunggu_verifikasi'
         )
         self.assertEqual(self.item.display_status, 'pending')
 
@@ -42,7 +56,8 @@ class SimpleItemTest(TestCase):
         """Cek status jadi 'dipinjam' jika transaksi disetujui"""
         Transaksi.objects.create(
             barang=self.item, peminjam=self.other_user, pemilik=self.owner,
-            tanggal_mulai='2026-10-01', tanggal_selesai='2026-10-05', status='disetujui'
+            tanggal_mulai=datetime.date(2026, 10, 1), tanggal_selesai=datetime.date(2026, 10, 5),
+            status='disetujui'
         )
         self.assertEqual(self.item.display_status, 'dipinjam')
 
@@ -53,7 +68,7 @@ class SimpleItemTest(TestCase):
         """Form valid jika harga berupa angka normal"""
         form = ItemForm(data={
             'name': 'Tenda', 'description': 'Tenda 4 orang', 'category': 'camping',
-            'price': '150000', 'condition': 'baik', 'location': 'Bogor'
+            'price': '150000', 'condition': 'baik'
         })
         self.assertTrue(form.is_valid())
 
@@ -61,7 +76,7 @@ class SimpleItemTest(TestCase):
         """Form tidak valid jika harga 0"""
         form = ItemForm(data={
             'name': 'Tenda', 'description': 'Tenda', 'category': 'camping',
-            'price': '0', 'condition': 'baik', 'location': 'Bogor'
+            'price': '0', 'condition': 'baik'
         })
         self.assertFalse(form.is_valid())
 
@@ -69,7 +84,7 @@ class SimpleItemTest(TestCase):
         """Form tidak valid jika harga melebihi batas MAX_PRICE"""
         form = ItemForm(data={
             'name': 'Tenda', 'description': 'Tenda', 'category': 'camping',
-            'price': str(MAX_PRICE + 1), 'condition': 'baik', 'location': 'Bogor'
+            'price': str(MAX_PRICE + 1), 'condition': 'baik'
         })
         self.assertFalse(form.is_valid())
 
@@ -112,3 +127,109 @@ class SimpleItemTest(TestCase):
         response = self.client.get(reverse('item:my_items'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Kamera Fujifilm')
+
+    # ==========================================
+    # 4. ATURAN BISNIS: WAJIB INFO PEMBAYARAN
+    # ==========================================
+    def _item_post_data(self, name='Tenda Baru'):
+        return {
+            'name': name, 'description': 'Tenda 4 orang', 'category': 'camping',
+            'price': '75000', 'condition': 'baik',
+        }
+
+    def test_tanpa_info_pembayaran_tidak_bisa_buka_form_tambah(self):
+        self.client.login(username='tzuyu', password='password123')  # belum isi payment
+        response = self.client.get(reverse('item:item_create'))
+        self.assertRedirects(response, reverse('userprofile:edit_profile'),
+                             fetch_redirect_response=False)
+
+    def test_tanpa_info_pembayaran_tidak_bisa_post_tambah(self):
+        self.client.login(username='tzuyu', password='password123')
+        response = self.client.post(reverse('item:item_create'), self._item_post_data())
+        self.assertRedirects(response, reverse('userprofile:edit_profile'),
+                             fetch_redirect_response=False)
+        self.assertFalse(Item.objects.filter(name='Tenda Baru').exists())
+
+    def test_info_pembayaran_setengah_terisi_tetap_ditolak(self):
+        profile = self.other_user.profile
+        profile.payment_provider = 'BCA'   # nomor & nama pemilik masih kosong
+        profile.save()
+        self.client.login(username='tzuyu', password='password123')
+        response = self.client.get(reverse('item:item_create'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_dengan_info_pembayaran_bisa_tambah_barang(self):
+        self.client.login(username='jihyo', password='password123')
+        self.assertEqual(self.client.get(reverse('item:item_create')).status_code, 200)
+        response = self.client.post(reverse('item:item_create'), self._item_post_data())
+        self.assertEqual(response.status_code, 302)
+        new_item = Item.objects.get(name='Tenda Baru')
+        self.assertEqual(new_item.owner, self.owner)
+
+    def test_edit_barang_lama_tidak_diblokir(self):
+        """Aturan hanya untuk menambah barang baru; barang lama tetap bisa diedit."""
+        profile = self.owner.profile
+        profile.payment_provider = ''
+        profile.payment_number = ''
+        profile.payment_holder = ''
+        profile.save()
+        self.client.login(username='jihyo', password='password123')
+        response = self.client.get(reverse('item:item_update', args=[self.item.pk]))
+        self.assertEqual(response.status_code, 200)
+
+    # ==========================================
+    # 5. LOKASI DIAMBIL DARI PROFIL PEMILIK
+    # ==========================================
+    def test_lokasi_barang_dari_profil_pemilik(self):
+        self.assertEqual(Item.objects.get(pk=self.item.pk).location, 'Kota Depok')
+
+    def test_lokasi_ikut_berubah_saat_profil_diubah(self):
+        profile = self.owner.profile
+        profile.city = 'KOTA BANDUNG'
+        profile.save()
+        self.assertEqual(Item.objects.get(pk=self.item.pk).location, 'Kota Bandung')
+
+    def test_lokasi_fallback_jika_profil_belum_diisi(self):
+        item = Item.objects.create(
+            owner=self.other_user, name='Buku', description='Buku', price=1000)
+        self.assertEqual(item.location, 'Lokasi belum diatur')
+
+    def test_form_tidak_punya_field_lokasi(self):
+        self.assertNotIn('location', ItemForm().fields)
+
+    def test_form_menampilkan_lokasi_pemilik_tanpa_input(self):
+        self.client.login(username='jihyo', password='password123')
+        response = self.client.get(reverse('item:item_create'))
+        self.assertContains(response, 'Kota Depok')
+        self.assertNotContains(response, 'name="location"')
+
+    # ==========================================
+    # 6. PREVIEW FOTO DI FORM
+    # ==========================================
+    def test_form_punya_area_preview_foto_baru(self):
+        self.client.login(username='jihyo', password='password123')
+        response = self.client.get(reverse('item:item_create'))
+        self.assertContains(response, 'id="new-photo-preview"')
+        self.assertContains(response, 'id="new-photo-list"')
+
+    def test_foto_tersimpan_tampil_dan_hapus_tidak_bersarang(self):
+        img = ItemImage.objects.create(item=self.item, image='items/contoh.jpg', order=0)
+        self.client.login(username='jihyo', password='password123')
+        response = self.client.get(reverse('item:item_update', args=[self.item.pk]))
+        self.assertContains(response, '/media/items/contoh.jpg')
+        # tombol hapus memakai atribut form= ke <form> terpisah di luar form utama
+        self.assertContains(response, f'form="del-img-{img.pk}"')
+        self.assertContains(response, f'<form id="del-img-{img.pk}"')
+
+    def test_upload_foto_tersimpan_ke_barang(self):
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), 'red').save(buffer, format='PNG')
+        png = buffer.getvalue()
+        self.client.login(username='jihyo', password='password123')
+        data = self._item_post_data('Barang Berfoto')
+        data['images'] = [SimpleUploadedFile('a.png', png, content_type='image/png'),
+                          SimpleUploadedFile('b.png', png, content_type='image/png')]
+        with self.settings(MEDIA_ROOT='/tmp/pinjemaja_test_media'):
+            response = self.client.post(reverse('item:item_create'), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Item.objects.get(name='Barang Berfoto').images.count(), 2)
