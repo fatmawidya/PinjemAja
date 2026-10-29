@@ -50,14 +50,17 @@
 
                 <div class="pjchat-thread-info">
                     <strong>{{ conv.other_participant.username }}</strong>
-                    <small>
+                    <div class="pjchat-thread-meta">
                         {% if conv.item %}
-                            Barang: {{ conv.item.name }}
-                        {% else %}
-                            Tidak ada barang terkait
+                            <span class="pjchat-item-badge">
+                                {{ conv.item.name }}
+                            </span>
                         {% endif %}
-                    </small>
-                    <small>{{ conv.last_preview }}</small>
+
+                        <small class="pjchat-thread-preview">
+                            📦 {{ conv.last_preview }}
+                        </small>
+                    </div>
                 </div>
 
                 {% if conv.unread_count > 0 %}
