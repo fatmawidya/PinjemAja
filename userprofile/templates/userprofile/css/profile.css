@@ -216,3 +216,33 @@
     }
 }
 
+/* joined */
+.profile-meta {
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 0.75rem;
+    padding: 0.4rem 1rem;
+    background: #2E7D5B;
+    color: #FFFFFF;
+    border-radius: 999px;
+    font-size: 0.9rem;
+}
+
+.profile-meta .meta-item + .meta-item::before {
+    content: "|";
+    margin: 0 0.6rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 480px) {
+    .profile-meta {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+    }
+    .profile-meta .meta-item + .meta-item::before {
+        margin: 0 0.4rem;
+    }
+}
