@@ -2,12 +2,8 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Q
-from django.shortcuts import (
-    get_object_or_404,
-    redirect,
-    render,
-)
+from django.db.models import Q, Max, F
+from django.shortcuts import (get_object_or_404, redirect, render)
 from django.views.decorators.http import require_POST
 from item.models import Item
 from .models import Conversation, Message
@@ -28,7 +24,10 @@ def build_chat_sidebar_context(request, active_conversation_id=None):
             Q(participant_1=request.user) | Q(participant_2=request.user)
         )
         .select_related("participant_1", "participant_2", "item")
-        .order_by("-created_at")
+        .annotate(last_message_at=Max("messages__created_at"))
+        .order_by(
+            F("last_message_at").desc(nulls_last=True), "-created_at"
+        )
     )
 
     processed_conversations = []
@@ -38,6 +37,15 @@ def build_chat_sidebar_context(request, active_conversation_id=None):
             other_participant = conv.participant_2
         else:
             other_participant = conv.participant_1
+
+        last = (
+            conv.messages.exclude(hidden_for=request.user)
+            .order_by("-created_at", "-pk").first()
+        )
+        conv.last_preview = (
+            "Pesan telah dihapus" if last.deleted_for_everyone
+            else last.text[:40]
+        ) if last else "Belum ada pesan"
 
         unread_messages_count = (
             Message.objects.filter(
@@ -62,7 +70,10 @@ def build_chat_sidebar_context(request, active_conversation_id=None):
     if search_query:
         processed_conversations = [
             conv for conv in processed_conversations
-            if search_query.lower() in conv.other_participant.username.lower()
+            if (
+                search_query.lower() in conv.other_participant.username.lower()
+                or (conv.item and search_query.lower() in conv.item.name.lower())
+            )
         ]
 
     if current_filter == "unread":
@@ -223,6 +234,8 @@ def conversation_detail(request, conversation_id):
             is_read=False,
         ).exclude(
             sender=request.user
+        ).exclude(
+            hidden_for=request.user
         ).update(is_read=True)
 
     # Ambil riwayat pesan yang tidak disembunyikan
@@ -267,6 +280,11 @@ def edit_message(request, message_id):
     if message.deleted_for_everyone:
         raise PermissionDenied(
             "Pesan yang sudah dihapus tidak dapat diedit."
+        )
+
+    if message.hidden_for.filter(pk=request.user.pk).exists():
+        raise PermissionDenied(
+            "Pesan sudah dihapus untuk pengguna ini."
         )
 
     # Hanya pengirim yang boleh mengedit pesannya
@@ -393,7 +411,7 @@ def delete_message(request, message_id):
             )
 
         # Soft delete: jangan hapus objek Message
-        message.text = ""
+        message.text = "" #ngapus pesan buat semua
         message.deleted_for_everyone = True
         message.save(
             update_fields=["text", "deleted_for_everyone"]
@@ -494,6 +512,7 @@ def conversation_messages_json(request, conversation_id):
     return JsonResponse({
         "conversation_id": conversation.pk,
         "messages": messages_data,
+        "message_count": len(messages_data),
     })
 
 

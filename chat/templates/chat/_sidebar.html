@@ -13,7 +13,7 @@
                 type="text"
                 name="q"
                 value="{{ chat_search_query }}"
-                placeholder="Cari nama pengguna..."
+                placeholder="Cari nama pengguna atau barang..."
                 class="pjchat-search-input"
             >
             <input type="hidden" name="filter" value="{{ chat_filter }}">
@@ -57,6 +57,7 @@
                             Tidak ada barang terkait
                         {% endif %}
                     </small>
+                    <small>{{ conv.last_preview }}</small>
                 </div>
 
                 {% if conv.unread_count > 0 %}
