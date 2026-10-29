@@ -58,6 +58,10 @@ class Transaksi(models.Model):
             return 0
         return self.barang.price * durasi
 
+    @property
+    def sudah_diberi_rating(self):
+        return self.rating_pemilik is not None
+
     def save(self, *args, **kwargs):
         if self.harga_terkunci:
             pass

@@ -96,7 +96,7 @@ def upload_bukti(request, transaksi_id):
 def detail_transaksi(request, transaksi_id):
     update_transaksi_selesai()
     transaksi = get_object_or_404(
-        Transaksi.objects.select_related("barang", "peminjam", "pemilik", "pemilik__profile", "peminjam__profile"),
+        Transaksi.objects.select_related("barang", "peminjam", "pemilik", "pemilik__profile", "peminjam__profile").prefetch_related("barang__images"),
         pk=transaksi_id,
     )
 
@@ -127,13 +127,15 @@ def rating_pemilik(request, transaksi_id):
     if action == "skip":
         transaksi.rating_dilewati = True
         transaksi.save(update_fields=["rating_dilewati"])
-        messages.info(request, "Rating dilewati. Terima kasih!")
+        title, message, toast_type = "Rating dilewati", "Terima kasih sudah memberi tahu kami.", "normal"
     else:
         try:
             nilai = int(request.POST.get("rating", ""))
         except (TypeError, ValueError):
             nilai = 0
         if nilai not in range(1, 6):
+            if _is_ajax(request):
+                return _toast_html("", "Rating belum dipilih", "Pilih rating antara 1 sampai 5 bintang.", "error", status=400)
             messages.error(request, "Pilih rating antara 1 sampai 5 bintang.")
             return redirect("transaction:detail_transaksi", transaksi_id=transaksi.pk)
 
@@ -144,7 +146,16 @@ def rating_pemilik(request, transaksi_id):
             pemilik=transaksi.pemilik, rating_pemilik__isnull=False,
         ).aggregate(rata_rata=Avg("rating_pemilik"))["rata_rata"] or 0
         profile.save(update_fields=["rating"])
-        messages.success(request, "Rating untuk pemilik berhasil dikirim.")
+        title, message, toast_type = "Rating terkirim", "Terima kasih sudah memberi rating kepada pemilik.", "success"
+    if _is_ajax(request):
+        response = _toast_html("", title, message, toast_type)
+        response["X-Owner-Rating"] = str(transaksi.pemilik.profile.rating)
+        response["X-Rating-Action"] = action or "rate"
+        return response
+    if action == "skip":
+        messages.info(request, message)
+    else:
+        messages.success(request, message)
     return redirect("transaction:detail_transaksi", transaksi_id=transaksi.pk)
 
 @login_required
@@ -284,53 +295,6 @@ def aksi(request, transaksi_id):
 
     messages.success(request, pesan)
     return redirect(redirect_url)
-
-# @login_required
-# @require_POST
-# def aksi(request, transaksi_id):
-#     transaksi = get_object_or_404(Transaksi, pk=transaksi_id)
-#     action = request.POST.get('aksi')
-
-#     if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
-#         return _respon_error(request, 'Anda tidak memiliki akses.', redirect_url, status=403)
-
-#     if  transaksi.peminjam_id == request.user.pk:
-#         redirect_url = reverse('transaction:riwayat_meminjam')
-#     elif transaksi.pemilik_id == request.user.pk:
-#         redirect_url = reverse('transaction:permintaan_masuk')
-#     else:
-#         redirect_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
-    
-#     # tombol
-#     transitions = {
-#         ('menunggu_verifikasi', 'batal', False): ('dibatalkan', 'Peminjam'),
-#         ('menunggu_verifikasi', 'batal', True):  ('dibatalkan', 'Pemilik'),
-#         ('menunggu_verifikasi', 'terima', True):    ('menunggu_pembayaran', None),
-#         ('menunggu_konfirmasi', 'tolak', True):     ('ditolak', None),
-#         ('menunggu_konfirmasi', 'terima', True):    ('disetujui', None),
-#         ('ditolak', 'kirim_ulang', False):          ('menunggu_verifikasi', None),
-#     }
-
-#     result = transitions.get((transaksi.status, action,  transaksi.pemilik_id == request.user.pk))
-
-#     if not result:
-#         return _respon_error(request, 'Aksi tidak tersedia untuk status ini.', redirect_url, status=403)
-
-#     alasan = request.POST.get('alasan', '').strip()
-
-#     if action == 'tolak' and not alasan:
-#         return _respon_error(request, 'Alasan penolakan wajib diisi.', redirect_url)
-
-#     transaksi.status = result[0]
-#     if result[1]:
-#         transaksi.dibatalkan_oleh = result[1]
-#         transaksi.dibatalkan_pada = timezone.now()
-#     if action == 'tolak':
-#         transaksi.catatan_penolakan = alasan
-#     transaksi.save()
-
-#     pesan = f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".'
-#     return _respon_ok(request, transaksi, pesan, redirect_url)
 
 def edit_bukti(request, transaksi_id):
     transaksi = get_object_or_404(

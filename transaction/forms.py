@@ -53,6 +53,7 @@ class FormUploadBukti(forms.ModelForm):
         bukti = self.cleaned_data.get('bukti_pembayaran')
         if bukti and bukti.size > 5 * 1024 * 1024:
             raise ValidationError('Ukuran file maksimal 5MB.')
-        if bukti and not (bukti.content_type or '').startswith('image/'):
+        content_type = getattr(bukti, 'content_type', None)
+        if content_type and not content_type.startswith('image/'):
             raise ValidationError('File harus berupa gambar.')
         return bukti
