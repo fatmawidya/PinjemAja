@@ -7,7 +7,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .forms import RegisterForm, ProfileForm
+from .forms import RegisterForm, ProfileForm, UserEmailForm
 from .models import Profile
 
 def register_view(request):
@@ -82,7 +82,18 @@ def edit_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
+        email_form = (
+            UserEmailForm(request.POST, instance=request.user)
+            if 'email' in request.POST
+            else None
+        )
+        form_ok = form.is_valid()
+        email_ok = email_form.is_valid() if email_form else True
+
+        if form_ok and email_ok:
+            if email_form:
+                email_form.save()
+
             profile = form.save(commit=False)
             profile.province = _wilayah(request, 'province', profile.province)
             profile.city = _wilayah(request, 'city', profile.city)
@@ -90,24 +101,41 @@ def edit_profile(request):
             profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
             profile.street_address = request.POST.get('street_address', '').strip()
             profile.save()
+
             messages.success(request, 'Profil berhasil disimpan.')
             return redirect('userprofile:my_profile')
+
+        if email_form and not email_ok:
+            email_errors = email_form.errors.get('email')
+            if email_errors:
+                form.add_error(None, email_errors[0])
+
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'userprofile/edit_profile.html', {'form': form, 'profile': profile, 'active_menu': 'profil'})
 
+    return render(
+        request,
+        'userprofile/edit_profile.html',
+        {
+            'form': form,
+            'profile': profile,
+            'active_menu': 'profil',
+        },
+    )
 
 @require_POST
 @login_required
 def edit_profile_htmx(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    form = ProfileForm(
-        request.POST,
-        request.FILES,
-        instance=profile
-    )
+    form = ProfileForm(request.POST, request.FILES, instance=profile)
+    email_form = UserEmailForm(request.POST, instance=request.user) if 'email' in request.POST else None
 
-    if form.is_valid():
+    form_ok = form.is_valid()
+    email_ok = email_form.is_valid() if email_form else True
+
+    if form_ok and email_ok:
+        if email_form:
+            email_form.save()
         profile = form.save(commit=False)
 
         profile.province = _wilayah(request, 'province', profile.province)
@@ -126,8 +154,8 @@ def edit_profile_htmx(request):
             'userprofile:my_profile'
         )
         return response
-    else:
-        print(form.errors)
+    if not email_ok:
+        form.add_error(None, email_form.errors['email'][0])
 
     response = render(
         request,
@@ -172,4 +200,25 @@ def delete_avatar(request):
     response['HX-Trigger'] = json.dumps({
         'showToast': {'title': 'Foto Profil', 'message': message, 'type': toast_type}
     })
+    return response
+
+@login_required
+@require_POST
+def hard_delete_account(request):
+    user = request.user
+    if not user.check_password(request.POST.get('password', '')):
+        response = HttpResponse(status=204)
+        response['HX-Trigger'] = json.dumps({'showToast': {
+            'title': 'Gagal', 'message': 'Password salah.', 'type': 'error'}})
+        return response
+
+    profile = Profile.objects.filter(user=user).first()
+    if profile and profile.avatar:
+        profile.avatar.delete(save=False)
+
+    logout(request)
+    user.delete()
+    messages.success(request, 'Akun dihapus permanen.')
+    response = HttpResponse(status=204)
+    response['HX-Redirect'] = reverse('landing_page')
     return response

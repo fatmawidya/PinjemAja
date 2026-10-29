@@ -63,3 +63,16 @@ class ProfileForm(forms.ModelForm):
             elif not re.fullmatch(r'\d{10,16}', number):
                 self.add_error('payment_number', 'Nomor rekening harus 10-16 digit angka.')
         return data
+
+class UserEmailForm(forms.ModelForm):
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['email']
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Email sudah dipakai.')
+        return email
